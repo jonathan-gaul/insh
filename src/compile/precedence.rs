@@ -60,6 +60,7 @@ impl ParseRule {
             TokenType::OpenBrace => Some(Compiler::block),
             TokenType::Let => Some(Compiler::let_var),
             TokenType::Pin => Some(Compiler::pin_var),
+            TokenType::If => Some(Compiler::if_expression),
             _ => None,
         }
     }

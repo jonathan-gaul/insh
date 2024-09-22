@@ -6,10 +6,7 @@ use crate::{
 };
 
 use super::{
-    chunk::ByteCodeChunk,
-    local::{Scope, ScopeSearch},
-    op::Op,
-    value::Value,
+    chunk::bytecode_chunk::ByteCodeChunk, local::{Scope, ScopeSearch}, op::Op, value::{fvalue, ivalue, Value}
 };
 
 #[derive(Debug)]
@@ -47,6 +44,17 @@ impl Vm {
         self.stack.pop().unwrap()
     }
 
+    fn peek_stack(&self, _: usize) -> Value {
+        if let Some(last) = self.stack.last() {
+            last.clone()
+        } else {        
+            panic!(
+                "stack underflow at {:08}",
+                (self.ip.wrapping_sub(self.chunk.content.as_ptr() as usize) as usize)
+            )
+        }
+    }
+
     fn read_as<T>(&mut self) -> T {
         let val: T;
         unsafe {
@@ -78,17 +86,17 @@ impl Vm {
                 }
 
                 Op::IntConstant => {
-                    let v = self.read_as::<i64>();
+                    let v = self.read_as::<ivalue>();
                     self.push_stack(Value::Int(v));
                 }
 
                 Op::FloatConstant => {
-                    let v = self.read_as::<f64>();
+                    let v = self.read_as::<fvalue>();
                     self.push_stack(Value::Float(v));
                 }
 
                 Op::StringConstant => {
-                    let string_id = self.read_as::<i64>();
+                    let string_id = self.read_as::<ivalue>();
                     let s = self.chunk.get_string(string_id as usize).to_owned();
                     self.push_stack(Value::String(s))
                 }
@@ -108,8 +116,8 @@ impl Vm {
                     Value::None => match self.pop_stack() {
                         Value::None => self.push_stack(Value::Int(0)),
                         Value::Int(y) => self.push_stack(Value::Int(y + 0)),
-                        Value::Float(y) => self.push_stack(Value::Float(y + 0.0)),
-                        Value::String(v) => match (*v).parse::<i64>() {
+                        Value::Float(y) => self.push_stack(Value::Float(y + 0)),
+                        Value::String(v) => match (*v).parse::<ivalue>() {
                             Ok(y) => self.push_stack(Value::Int(y + 0)),
                             Err(_) => return Err(VmError::InvalidValue),
                         },
@@ -118,8 +126,8 @@ impl Vm {
                     Value::Int(x) => match self.pop_stack() {
                         Value::None => self.push_stack(Value::Int(x)),
                         Value::Int(y) => self.push_stack(Value::Int(y + x)),
-                        Value::Float(y) => self.push_stack(Value::Float(y + x as f64)),
-                        Value::String(v) => match (*v).parse::<i64>() {
+                        Value::Float(y) => self.push_stack(Value::Float(y + x as fvalue)),
+                        Value::String(v) => match (*v).parse::<ivalue>() {
                             Ok(y) => self.push_stack(Value::Int(y + x)),
                             Err(_) => return Err(VmError::InvalidValue),
                         },
@@ -127,9 +135,9 @@ impl Vm {
                     },
                     Value::Float(x) => match self.pop_stack() {
                         Value::None => self.push_stack(Value::Float(x)),
-                        Value::Int(y) => self.push_stack(Value::Float(y as f64 + x)),
+                        Value::Int(y) => self.push_stack(Value::Float(y as fvalue + x)),
                         Value::Float(y) => self.push_stack(Value::Float(y + x)),
-                        Value::String(v) => match (*v).parse::<f64>() {
+                        Value::String(v) => match (*v).parse::<fvalue>() {
                             Ok(y) => self.push_stack(Value::Float(y + x)),
                             Err(_) => return Err(VmError::InvalidValue),
                         },
@@ -148,15 +156,15 @@ impl Vm {
                 Op::Multiply => match self.pop_stack() {
                     Value::None => match self.pop_stack() {
                         Value::None => self.push_stack(Value::None),
-                        Value::Int(y) => self.push_stack(Value::Int(y * 0)),
-                        Value::Float(y) => self.push_stack(Value::Float(y * 0.0)),
+                        Value::Int(_) => self.push_stack(Value::Int(0)),
+                        Value::Float(_) => self.push_stack(Value::Float(0)),
                         Value::String(_) => self.push_stack(Value::None),
                         _ => return Err(VmError::InvalidOperation),
                     },
                     Value::Int(x) => match self.pop_stack() {
                         Value::None => self.push_stack(Value::Int(0)),
                         Value::Int(y) => self.push_stack(Value::Int(y * x)),
-                        Value::Float(y) => self.push_stack(Value::Float(y * x as f64)),
+                        Value::Float(y) => self.push_stack(Value::Float(y * x as fvalue)),
                         Value::String(y) => {
                             let s = y.repeat(x as usize);
                             self.push_stack(Value::String(s))
@@ -165,7 +173,7 @@ impl Vm {
                     },
                     Value::Float(x) => match self.pop_stack() {
                         Value::None => self.push_stack(Value::Int(0)),
-                        Value::Int(y) => self.push_stack(Value::Float(y as f64 * x)),
+                        Value::Int(y) => self.push_stack(Value::Float(y as fvalue * x)),
                         Value::Float(y) => self.push_stack(Value::Float(y * x)),
                         Value::String(y) => {
                             self.push_stack(Value::String(y.repeat(x as usize)));
@@ -189,8 +197,8 @@ impl Vm {
                     Value::None => match self.pop_stack() {
                         Value::None => self.push_stack(Value::None),
                         Value::Int(y) => self.push_stack(Value::Int(y - 0)),
-                        Value::Float(y) => self.push_stack(Value::Float(y - 0.0)),
-                        Value::String(v) => match (*v).parse::<i64>() {
+                        Value::Float(y) => self.push_stack(Value::Float(y - 0)),
+                        Value::String(v) => match (*v).parse::<ivalue>() {
                             Ok(y) => self.push_stack(Value::Int(y - 0)),
                             Err(_) => return Err(VmError::InvalidValue),
                         },
@@ -199,18 +207,18 @@ impl Vm {
                     Value::Int(x) => match self.pop_stack() {
                         Value::None => self.push_stack(Value::Int(0 - x)),
                         Value::Int(y) => self.push_stack(Value::Int(y - x)),
-                        Value::Float(y) => self.push_stack(Value::Float(y - x as f64)),
-                        Value::String(v) => match (*v).parse::<i64>() {
+                        Value::Float(y) => self.push_stack(Value::Float(y - x as fvalue)),
+                        Value::String(v) => match (*v).parse::<ivalue>() {
                             Ok(y) => self.push_stack(Value::Int(y - x)),
                             Err(_) => return Err(VmError::InvalidValue),
                         },
                         _ => return Err(VmError::InvalidOperation),
                     },
                     Value::Float(x) => match self.pop_stack() {
-                        Value::None => self.push_stack(Value::Float(0.0 - x)),
-                        Value::Int(y) => self.push_stack(Value::Float(y as f64 - x)),
+                        Value::None => self.push_stack(Value::Float(0 - x)),
+                        Value::Int(y) => self.push_stack(Value::Float(y as fvalue - x)),
                         Value::Float(y) => self.push_stack(Value::Float(y - x)),
-                        Value::String(v) => match (*v).parse::<f64>() {
+                        Value::String(v) => match (*v).parse::<fvalue>() {
                             Ok(y) => self.push_stack(Value::Float(y - x)),
                             Err(_) => return Err(VmError::InvalidValue),
                         },
@@ -246,18 +254,18 @@ impl Vm {
                     Value::Int(x) => match self.pop_stack() {
                         Value::None => self.push_stack(Value::Int(0 / x)),
                         Value::Int(y) => self.push_stack(Value::Int(y / x)),
-                        Value::Float(y) => self.push_stack(Value::Float(y / x as f64)),
-                        Value::String(v) => match (*v).parse::<i64>() {
+                        Value::Float(y) => self.push_stack(Value::Float(y / x as fvalue)),
+                        Value::String(v) => match (*v).parse::<ivalue>() {
                             Ok(y) => self.push_stack(Value::Int(y / x)),
                             Err(_) => return Err(VmError::InvalidValue),
                         },
                         _ => return Err(VmError::InvalidOperation),
                     },
                     Value::Float(x) => match self.pop_stack() {
-                        Value::None => self.push_stack(Value::Float(0.0 / x)),
-                        Value::Int(y) => self.push_stack(Value::Float(y as f64 / x)),
+                        Value::None => self.push_stack(Value::Float(0 / x)),
+                        Value::Int(y) => self.push_stack(Value::Float(y as fvalue / x)),
                         Value::Float(y) => self.push_stack(Value::Float(y / x)),
-                        Value::String(v) => match (*v).parse::<f64>() {
+                        Value::String(v) => match (*v).parse::<fvalue>() {
                             Ok(y) => self.push_stack(Value::Float(y / x)),
                             Err(_) => return Err(VmError::InvalidValue),
                         },
@@ -337,8 +345,18 @@ impl Vm {
                     self.evaluate(v, EvaluateContext::None);
                 }
 
+                Op::BranchIfFalse => {
+                    let dist = self.read_as::<usize>() as usize;
+                    let val = self.evaluate(self.peek_stack(0), EvaluateContext::None);
+                    if !val.to_native_bool() {
+                        self.ip = self.ip.wrapping_add(dist);
+                    }
+
+                }
+
                 x => {
-                    println!("unknown op: {:?}", x);
+                    let offset = self.ip.wrapping_sub(self.chunk.content.as_ptr() as usize);
+                    println!("unknown op: {:?} at {:08}", x, offset as usize);
                 }
             }
         }

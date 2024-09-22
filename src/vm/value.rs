@@ -1,10 +1,17 @@
 use std::collections::HashMap;
 
+pub use i32 as ivalue;
+pub const IVALUE_SIZE: usize = size_of::<ivalue>();
+
+pub use i64 as fvalue;
+pub const FVALUE_SIZE: usize = size_of::<fvalue>();
+
+
 #[derive(Debug, Clone)]
 pub enum Value {
     None,
-    Int(i64),
-    Float(f64),
+    Int(ivalue),
+    Float(fvalue),
     String(String),
     Bool(bool),
     Map(HashMap<Value, Value>),
@@ -53,6 +60,15 @@ impl Value {
             Value::Map(_) => "".to_owned(),
             Value::Command(x, _) => x.to_owned(),
             Value::Bool(x) => format!("{}", x),
+        }
+    }
+
+    pub fn to_native_bool(&self) -> bool {
+        match self {
+            Value::None | Value::Int(0) | Value::Float(0) | Value::Bool(false) | Value::Command(_, _) => false,
+            Value::String(x) => x.len() != 0,
+            Value::Map(x) => x.len() != 0,
+            _ => true
         }
     }
 }

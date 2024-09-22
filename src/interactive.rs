@@ -8,7 +8,7 @@ use rustyline::{error::ReadlineError, DefaultEditor, Result};
 use crate::{
     compile::compiler::Compiler,
     scan::scanner::Scanner,
-    vm::{chunk::ByteCodeChunk, evaluate::EvaluateContext, vm::Vm},
+    vm::{chunk::bytecode_chunk::ByteCodeChunk, evaluate::EvaluateContext, vm::Vm},
 };
 
 pub fn interactive() -> Result<()> {

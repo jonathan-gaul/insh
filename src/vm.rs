@@ -1,5 +1,4 @@
 pub mod chunk;
-pub mod disassemble;
 pub mod evaluate;
 pub mod local;
 pub mod op;

@@ -1,5 +1,5 @@
 #[repr(u8)]
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
 pub enum Op {
     Invalid = 0,
 
@@ -30,6 +30,8 @@ pub enum Op {
 
     Command = 64,
 
+    BranchIfFalse = 96,
+
     SysCall = 128,
 
     BeginScope = 224,
@@ -39,7 +41,13 @@ pub enum Op {
     Unknown = 255,
 }
 
+pub const OP_SIZE: usize = size_of::<Op>();
+
 impl Op {
+    pub fn to_ne_bytes(op: &Op) -> [u8; 1] {
+        [op.clone() as u8]
+    }
+
     pub fn from(val: u8) -> Op {
         match val {
             x if x == Op::Invalid as u8 => Op::Invalid,

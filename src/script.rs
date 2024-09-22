@@ -8,7 +8,7 @@ use rustyline::Result;
 use crate::{
     compile::compiler::Compiler,
     scan::scanner::Scanner,
-    vm::{chunk::ByteCodeChunk, evaluate::EvaluateContext, vm::Vm},
+    vm::{chunk::bytecode_chunk::ByteCodeChunk, evaluate::EvaluateContext, vm::Vm},
 };
 
 pub fn run_script(vm: &mut Vm, name: String) -> Result<()> {
