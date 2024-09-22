@@ -38,39 +38,42 @@ impl ByteCodeChunk {
         let mut reader = ByteCodeChunkReader::new(self);
 
         let op_funcs: HashMap<Op, (&str, DisassembleFn)> = [
-            (Op::Return, ("rts", ByteCodeChunk::disassemble_simple as DisassembleFn)),
-            (Op::IntConstant, ("cni", ByteCodeChunk::disassemble_1::<ivalue>)),
-            (Op::FloatConstant, ("cnf", ByteCodeChunk::disassemble_1::<fvalue>)),
-            (Op::StringConstant, ("cns", ByteCodeChunk::disassemble_string_const)),
-            (Op::Pop, ("pop", ByteCodeChunk::disassemble_simple)),
-            (Op::GetEnv, ("gev", ByteCodeChunk::disassemble_string_const)),
-            (Op::SetEnv, ("sev", ByteCodeChunk::disassemble_string_const)),
-            (Op::DefineLocal, ("dlv", ByteCodeChunk::disassemble_string_const)),
-            (Op::PinLocal, ("plv", ByteCodeChunk::disassemble_string_const)),
-            (Op::GetLocal, ("glv", ByteCodeChunk::disassemble_string_const)),
-            (Op::SetLocal, ("slv", ByteCodeChunk::disassemble_string_const)),
-            (Op::Add, ("add", ByteCodeChunk::disassemble_simple)),
-            (Op::Subtract, ("sub", ByteCodeChunk::disassemble_simple)),
-            (Op::Multiply, ("mul", ByteCodeChunk::disassemble_simple)),
-            (Op::Divide, ("div", ByteCodeChunk::disassemble_simple)),
-            (Op::Pipe, ("pip", ByteCodeChunk::disassemble_simple)),
-            (Op::Swap, ("swp", ByteCodeChunk::disassemble_simple)),
-            (Op::Negate, ("neg", ByteCodeChunk::disassemble_simple)),
-            (Op::Command, ("cmd", ByteCodeChunk::disassemble_simple)),
-            (Op::BranchIfFalse, ("brf", ByteCodeChunk::disassemble_1::<usize>)),
-            (Op::SysCall, ("sys", ByteCodeChunk::disassemble_simple)),
+            (Op::Return, ("RTS", ByteCodeChunk::disassemble_simple as DisassembleFn)),
+            (Op::IntConstant, ("CNI", ByteCodeChunk::disassemble_1::<ivalue>)),
+            (Op::FloatConstant, ("CNF", ByteCodeChunk::disassemble_1::<fvalue>)),
+            (Op::StringConstant, ("CNS", ByteCodeChunk::disassemble_string_const)),
+            (Op::Pop, ("POP", ByteCodeChunk::disassemble_simple)),
+            (Op::GetEnv, ("GEV", ByteCodeChunk::disassemble_string_const)),
+            (Op::SetEnv, ("SEV", ByteCodeChunk::disassemble_string_const)),
+            (Op::DefineLocal, ("DLV", ByteCodeChunk::disassemble_string_const)),
+            (Op::PinLocal, ("PLV", ByteCodeChunk::disassemble_string_const)),
+            (Op::GetLocal, ("GLV", ByteCodeChunk::disassemble_string_const)),
+            (Op::SetLocal, ("SLV", ByteCodeChunk::disassemble_string_const)),
+            (Op::Add, ("ADD", ByteCodeChunk::disassemble_simple)),
+            (Op::Subtract, ("SUB", ByteCodeChunk::disassemble_simple)),
+            (Op::Multiply, ("MUL", ByteCodeChunk::disassemble_simple)),
+            (Op::Divide, ("DIV", ByteCodeChunk::disassemble_simple)),
+            (Op::Pipe, ("PIP", ByteCodeChunk::disassemble_simple)),
+            (Op::Swap, ("SWP", ByteCodeChunk::disassemble_simple)),
+            (Op::Negate, ("NEG", ByteCodeChunk::disassemble_simple)),
+            (Op::Command, ("CMD", ByteCodeChunk::disassemble_simple)),
+            (Op::BranchIfFalse, ("BIF", ByteCodeChunk::disassemble_1::<usize>)),
+            (Op::Branch, ("BRA", ByteCodeChunk::disassemble_1::<usize>)),
+            (Op::SysCall, ("SYS", ByteCodeChunk::disassemble_simple)),
+            (Op::BeginScope, ("BSC", ByteCodeChunk::disassemble_simple)),
+            (Op::EndScope, ("ESC", ByteCodeChunk::disassemble_simple)),
 
         ].into_iter().map(|(op, (name, func))| (op, (name, func as DisassembleFn))).collect();
 
         let mut output = String::new();
 
         while let Some(op) = reader.next::<Op>() {
-            output.push_str(&format!("{:08} [{:02x}]", reader.get_offset(), op as u8));
-            if let Some((name, func)) = op_funcs.get(&op) {                
-                output.push_str(&func(self, &mut reader, name)?);
-                output.push_str("\n");
+            output += &format!("{:08} [{:02x}] ", reader.get_offset(), op as u8);
+            if let Some((name, func)) = op_funcs.get(&op) {
+                output += &func(self, &mut reader, name)?;
+                output += "\n";
             } else {
-                output.push_str("???");
+                output += "???\n";
             }
         };
 

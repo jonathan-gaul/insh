@@ -30,7 +30,8 @@ pub enum Op {
 
     Command = 64,
 
-    BranchIfFalse = 96,
+    Branch = 96,
+    BranchIfFalse = 97,
 
     SysCall = 128,
 

@@ -56,8 +56,7 @@ impl Compiler {
     pub(super) fn advance(&mut self) -> Result<(), CompileError> {
         match self.scanner.read_token() {
             Ok(token) => {
-                self.previous = mem::replace(&mut self.current, token);
-                // println!("advance: curr={:?}, prev={:?}", self.current, self.previous);
+                self.previous = mem::replace(&mut self.current, token);             
                 Ok(())
             }
             Err(e) => Err(CompileError::ScanError(e)),
@@ -290,20 +289,28 @@ impl Compiler {
         self.consume(TokenType::Then)?;
 
         let offset = self.emit_branch(&Op::BranchIfFalse);
-        println!("branch offset at {}", offset);
+        self.chunk.write_op(&Op::Pop);
 
         // <expr>
         self.expression()?;
 
+        let else_offset = self.emit_branch(&Op::Branch);
+
         self.patch_branch(offset);
+        self.chunk.write_op(&Op::Pop);
+        
+        if self.match_type(TokenType::Else)? {
+            self.expression()?;
+        }
+
+        self.patch_branch(else_offset);
+
         Ok(())
     }
 
     pub(super) fn patch_branch(&mut self, offset: usize) {
         let size = size_of::<usize>();
         let distance = self.chunk.len() - offset - size_of::<usize>();
-
-        println!("patched branch at {} -> {}", offset, distance);
 
         self.chunk.content[offset..offset+size].copy_from_slice(&usize::to_ne_bytes(distance));
     }

@@ -80,7 +80,6 @@ impl Vm {
             match op {
                 Op::Return => {
                     let value = self.pop_stack();
-                    println!("pop: {}", value);
                     let value = self.evaluate(value, context);
                     return Ok(value);
                 }
@@ -346,12 +345,17 @@ impl Vm {
                 }
 
                 Op::BranchIfFalse => {
-                    let dist = self.read_as::<usize>() as usize;
+                    let dist = self.read_as::<usize>();
                     let val = self.evaluate(self.peek_stack(0), EvaluateContext::None);
                     if !val.to_native_bool() {
                         self.ip = self.ip.wrapping_add(dist);
                     }
 
+                }
+
+                Op::Branch => {
+                    let dist = self.read_as::<usize>();
+                    self.ip = self.ip.wrapping_add(dist);
                 }
 
                 x => {
