@@ -280,7 +280,7 @@ impl Compiler {
         Ok(())
     }
 
-    pub(super) fn if_expression(&mut self, _:bool) -> Result<(), CompileError> {
+    pub(super) fn if_(&mut self, _: bool) -> Result<(), CompileError> {
 
         // if <expr>
         self.expression()?;
@@ -304,6 +304,31 @@ impl Compiler {
         }
 
         self.patch_branch(else_offset);
+
+        Ok(())
+    }
+
+    pub(super) fn and_(&mut self, _: bool) -> Result<(), CompileError> {
+        let offset = self.emit_branch(&Op::BranchIfFalse);
+
+        self.chunk.write_op(&Op::Pop);
+        self.parse_precedence(Precedence::And as u8)?;
+
+        self.patch_branch(offset);
+
+        Ok(())
+    }
+
+    pub(super) fn or_(&mut self, _: bool) -> Result<(), CompileError> {
+        let else_offset = self.emit_branch(&Op::BranchIfFalse);
+        let end_offset = self.emit_branch(&Op::Branch);
+
+        self.patch_branch(else_offset);
+        self.chunk.write_op(&Op::Pop);
+
+        self.parse_precedence(Precedence::Or as u8)?;
+
+        self.patch_branch(end_offset);
 
         Ok(())
     }

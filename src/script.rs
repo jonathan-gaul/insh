@@ -25,9 +25,7 @@ pub fn run_script(vm: &mut Vm, name: String) -> Result<()> {
         Err(e) => {
             println!("compile error: {:?}", e)
         }
-        Ok(_) => {
-            println!("compiled")
-        }
+        Ok(_) => {}
     }
 
     let chunk = compiler.into_chunk();
@@ -35,9 +33,7 @@ pub fn run_script(vm: &mut Vm, name: String) -> Result<()> {
         Err(e) => {
             println!("runtime error: {:?}", e)
         }
-        Ok(_) => {
-            println!("executed")
-        }
+        Ok(_) => {}
     };
 
     Ok(())

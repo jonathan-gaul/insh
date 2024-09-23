@@ -60,7 +60,7 @@ impl ParseRule {
             TokenType::OpenBrace => Some(Compiler::block),
             TokenType::Let => Some(Compiler::let_var),
             TokenType::Pin => Some(Compiler::pin_var),
-            TokenType::If => Some(Compiler::if_expression),
+            TokenType::If => Some(Compiler::if_),
             _ => None,
         }
     }
@@ -71,7 +71,9 @@ impl ParseRule {
             TokenType::Plus => Some(Compiler::binary),
             TokenType::Slash => Some(Compiler::binary),
             TokenType::Star => Some(Compiler::binary),
-            TokenType::Pipe => Some(Compiler::binary),
+            TokenType::Pipe => Some(Compiler::binary),            
+            TokenType::And => Some(Compiler::and_),
+            TokenType::Or => Some(Compiler::or_),
             _ => None,
         }
     }
@@ -82,6 +84,7 @@ impl ParseRule {
             TokenType::Slash | TokenType::Star => Precedence::Factor,
             TokenType::Equal | TokenType::QuestionEqual => Precedence::Assignment,
             TokenType::Pipe => Precedence::Primary,
+            TokenType::And => Precedence::And,
             _ => Precedence::None,
         }
     }
