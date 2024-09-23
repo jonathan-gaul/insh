@@ -4,8 +4,9 @@ pub use i32 as ivalue;
 pub const IVALUE_SIZE: usize = size_of::<ivalue>();
 
 pub use i64 as fvalue;
-pub const FVALUE_SIZE: usize = size_of::<fvalue>();
 
+use super::chunk::bytecode_chunk::ByteCodeChunk;
+pub const FVALUE_SIZE: usize = size_of::<fvalue>();
 
 #[derive(Debug, Clone)]
 pub enum Value {
@@ -16,6 +17,7 @@ pub enum Value {
     Bool(bool),
     Map(HashMap<Value, Value>),
     Command(String, Vec<Value>),
+    Function(String, u8, ByteCodeChunk),
 }
 
 #[macro_export]
@@ -40,6 +42,7 @@ impl std::fmt::Display for Value {
             }
             Value::Command(cmd, args) => write!(f, "{}/{}", cmd, args.len()),
             Value::Bool(x) => write!(f, "{}", x),
+            Value::Function(name, arity, _) => write!(f, "{}/{}", name, arity),
             // Value::Array(x) => {
             //     for k in x {
             //         _ = write!(f, "{}", k);
@@ -60,6 +63,7 @@ impl Value {
             Value::Map(_) => "".to_owned(),
             Value::Command(x, _) => x.to_owned(),
             Value::Bool(x) => format!("{}", x),
+            Value::Function(name, arity, _) => format!("{}/{}", name, arity),
         }
     }
 

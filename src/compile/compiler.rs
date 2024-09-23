@@ -5,8 +5,7 @@ use crate::{
         scanner::Scanner,
         tokens::{Token, TokenType},
     },
-    vm::{chunk::bytecode_chunk::ByteCodeChunk, op::Op},
-    vm::value::{ivalue, fvalue},
+    vm::{chunk::bytecode_chunk::ByteCodeChunk, op::Op, value::{fvalue, ivalue, Value}},
 };
 
 use super::{
@@ -20,8 +19,9 @@ pub struct LocalVariable {
 }
 
 pub struct Compiler {
+    pub(super) function: Value,
+
     pub(super) scanner: Scanner,
-    pub(super) chunk: ByteCodeChunk,
 
     pub(super) previous: Token,
     pub(super) current: Token,
@@ -35,9 +35,10 @@ pub struct Compiler {
 
 impl Compiler {
     pub fn new(scanner: Scanner, chunk: ByteCodeChunk) -> Self {
+        let function = Value::Function(String::new(), 0, chunk);
         Compiler {
+            function,
             scanner,
-            chunk,
             previous: Token::new(TokenType::Unknown, String::new()),
             current: Token::new(TokenType::Unknown, String::new()),
 
@@ -50,13 +51,17 @@ impl Compiler {
     }
 
     pub fn into_chunk(self) -> ByteCodeChunk {
-        self.chunk
+        if let Value::Function(_, _, chunk) = self.function {
+            chunk
+        } else {
+            ByteCodeChunk::new()
+        }
     }
 
     pub(super) fn advance(&mut self) -> Result<(), CompileError> {
         match self.scanner.read_token() {
             Ok(token) => {
-                self.previous = mem::replace(&mut self.current, token);             
+                self.previous = mem::replace(&mut self.current, token);
                 Ok(())
             }
             Err(e) => Err(CompileError::ScanError(e)),
@@ -87,7 +92,7 @@ impl Compiler {
         self.parse_precedence(Precedence::Unary as u8)?;
 
         match operator_type {
-            TokenType::Minus => self.chunk.write_op(&Op::Negate),
+            TokenType::Minus => self.emit_op(Op::Negate),
             TokenType::Plus => {}
             _ => return Err(CompileError::UnknownUnaryOperator),
         }
@@ -102,11 +107,11 @@ impl Compiler {
         self.parse_precedence(prec + 1)?;
 
         match operator_type {
-            TokenType::Plus => self.chunk.write_op(&Op::Add),
-            TokenType::Minus => self.chunk.write_op(&Op::Subtract),
-            TokenType::Star => self.chunk.write_op(&Op::Multiply),
-            TokenType::Slash => self.chunk.write_op(&Op::Divide),
-            TokenType::Pipe => self.chunk.write_op(&Op::Pipe),
+            TokenType::Plus => self.emit_op(Op::Add),
+            TokenType::Minus => self.emit_op(Op::Subtract),
+            TokenType::Star => self.emit_op(Op::Multiply),
+            TokenType::Slash => self.emit_op(Op::Divide),
+            TokenType::Pipe => self.emit_op(Op::Pipe),
             _ => {}
         }
 
@@ -132,7 +137,7 @@ impl Compiler {
         self.scope_depth -= 1;
 
         while self.local_count > 0 && self.locals[self.local_count - 1].depth > self.scope_depth {
-            self.chunk.write_op(&Op::Pop);
+            self.emit_op(Op::Pop);
             self.local_count -= 1;
         }
     }
@@ -181,14 +186,12 @@ impl Compiler {
     }
 
     pub(super) fn true_literal(&mut self, _: bool) -> Result<(), CompileError> {
-        self.chunk.write_op(&Op::BoolConstant);
-        self.chunk.write_bool(true);
+        self.emit_bool_constant(true);
         Ok(())
     }
 
     pub(super) fn false_literal(&mut self, _: bool) -> Result<(), CompileError> {
-        self.chunk.write_op(&Op::BoolConstant);
-        self.chunk.write_bool(false);
+        self.emit_bool_constant(false);
         Ok(())
     }
 
@@ -222,7 +225,7 @@ impl Compiler {
     }
 
     pub(super) fn env_var(&mut self, _: bool) -> Result<(), CompileError> {
-        let constant_id = self.chunk.add_string(self.previous.text.to_owned());
+        let env_name = self.previous.text.to_owned();
         let op = if self.match_type(TokenType::Equal)? {
             self.expression()?;
             Op::SetEnv
@@ -230,8 +233,7 @@ impl Compiler {
             Op::GetEnv
         };
 
-        self.chunk.write_op(&op);
-        self.chunk.write_ivalue(constant_id);
+        self.emit_var(op, env_name);
         Ok(())
     }
 
@@ -239,13 +241,11 @@ impl Compiler {
         // let @identifier = <expr>
         self.advance()?;
 
-        let constant_id = self.chunk.add_string(self.previous.text.to_owned());
+        let identifier = self.previous.text.to_owned();
         self.match_type(TokenType::Equal)?;
-
         self.expression()?;
-        self.chunk.write_op(&Op::DefineLocal);
-        self.chunk.write_ivalue(constant_id);
 
+        self.emit_var(Op::DefineLocal, identifier);
         Ok(())
     }
 
@@ -253,20 +253,18 @@ impl Compiler {
         // pin @identifier = <expr>
         self.advance()?;
 
-        let constant_id = self.chunk.add_string(self.previous.text.to_owned());
+        let identifier = self.previous.text.to_owned();
         self.match_type(TokenType::Equal)?;
-
         self.expression()?;
-        self.chunk.write_op(&Op::PinLocal);
-        self.chunk.write_ivalue(constant_id);
 
+        self.emit_var(Op::PinLocal, identifier);
         Ok(())
     }
 
     pub(super) fn local_var(&mut self, can_assign: bool) -> Result<(), CompileError> {
-        let constant_id = self.chunk.add_string(self.previous.text.to_owned());
-        let is_set = can_assign && self.match_type(TokenType::Equal)?;
+        let identifier = self.previous.text.to_owned();
 
+        let is_set: bool = can_assign && self.match_type(TokenType::Equal)?;
         let op = if is_set {
             self.expression()?;
             Op::SetLocal
@@ -274,9 +272,7 @@ impl Compiler {
             Op::GetLocal
         };
 
-        self.chunk.write_op(&op);
-        self.chunk.write_ivalue(constant_id);
-
+        self.emit_var(op, identifier);
         Ok(())
     }
 
@@ -288,43 +284,41 @@ impl Compiler {
         // then
         self.consume(TokenType::Then)?;
 
-        let offset = self.emit_branch(&Op::BranchIfFalse);
-        self.chunk.write_op(&Op::Pop);
+        let offset = self.emit_branch(Op::BranchIfFalse);
+        self.emit_op(Op::Pop);
 
         // <expr>
         self.expression()?;
 
-        let else_offset = self.emit_branch(&Op::Branch);
+        let else_offset = self.emit_branch(Op::Branch);
 
         self.patch_branch(offset);
-        self.chunk.write_op(&Op::Pop);
-        
+        self.emit_op(Op::Pop);
+
         if self.match_type(TokenType::Else)? {
             self.expression()?;
         }
 
         self.patch_branch(else_offset);
-
         Ok(())
     }
 
     pub(super) fn and(&mut self, _: bool) -> Result<(), CompileError> {
-        let offset = self.emit_branch(&Op::BranchIfFalse);
+        let offset = self.emit_branch(Op::BranchIfFalse);
 
-        self.chunk.write_op(&Op::Pop);
+        self.emit_op(Op::Pop);
         self.parse_precedence(Precedence::And as u8)?;
 
         self.patch_branch(offset);
-
         Ok(())
     }
 
     pub(super) fn or(&mut self, _: bool) -> Result<(), CompileError> {
-        let else_offset = self.emit_branch(&Op::BranchIfFalse);
-        let end_offset = self.emit_branch(&Op::Branch);
+        let else_offset = self.emit_branch(Op::BranchIfFalse);
+        let end_offset = self.emit_branch(Op::Branch);
 
         self.patch_branch(else_offset);
-        self.chunk.write_op(&Op::Pop);
+        self.emit_op(Op::Pop);
 
         self.parse_precedence(Precedence::Or as u8)?;
 
@@ -333,31 +327,40 @@ impl Compiler {
         Ok(())
     }
 
+    pub(super) fn current_offset(&self) -> usize {
+        if let Value::Function(_, _, chunk) = &self.function {
+            chunk.len()
+        } else {
+            0
+        }
+    }
+
     pub(super) fn while_(&mut self, _: bool) -> Result<(), CompileError> {
 
-        let start_offset = self.chunk.content.len();
+        let start_offset = self.current_offset();
 
         self.expression()?;
 
-        let end_offset = self.emit_branch(&Op::BranchIfFalse);
-        self.chunk.write_op(&Op::Pop);
-        
+        let end_offset = self.emit_branch(Op::BranchIfFalse);
+        self.emit_op(Op::Pop);
+
         self.expression()?;
 
         self.emit_loop(start_offset);
 
         self.patch_branch(end_offset);
 
-        self.chunk.write_op(&Op::Pop);
-
+        self.emit_op(Op::Pop);
         Ok(())
     }
 
     pub(super) fn patch_branch(&mut self, offset: usize) {
-        let size = size_of::<usize>();
-        let distance = self.chunk.len() - offset - size_of::<usize>();
-
-        self.chunk.content[offset..offset+size].copy_from_slice(&usize::to_ne_bytes(distance));
+        let current_offset = self.current_offset();
+        if let Value::Function(_, _, chunk) = &mut self.function {
+            let size = size_of::<usize>();
+            let distance = current_offset - offset - size_of::<usize>();
+            chunk.content[offset..offset+size].copy_from_slice(&usize::to_ne_bytes(distance));
+        }
     }
 
     pub fn compile(&mut self) -> Result<(), CompileError> {
@@ -371,13 +374,15 @@ impl Compiler {
                 Err(_) => self.consume(TokenType::EndOfFile)?,
             };
             if !self.check(TokenType::EndOfFile) {
-                self.chunk.write_op(&Op::Pop);
+                self.emit_op(Op::Pop);
             }
         }
         self.emit_return();
 
         if self.debug_output_chunk {
-            println!("{}", self.chunk.display());
+            if let Value::Function(_, _, chunk) = &self.function {
+                println!("{}", chunk.display());
+            }
         }
 
         Ok(())

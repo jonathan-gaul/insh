@@ -1,5 +1,6 @@
 use crate::{vm::op::Op, vm::value::{fvalue, ivalue, FVALUE_SIZE}};
 
+#[derive(Debug, Clone)]
 pub struct ByteCodeChunk {
     pub content: Vec<u8>,
     pub strings: Vec<String>,
@@ -17,41 +18,33 @@ impl ByteCodeChunk {
         self.content.len()
     }
 
+    #[inline(always)]
+    pub fn write_op(&mut self, v: Op) {
+        self.content.extend(&[v as u8])
+    }
+
+    #[inline(always)]
+    pub fn write_bool(&mut self, v: bool) {
+        let a = if v { 1 as u8 } else { 0 as u8 };
+        self.content.extend(&[a]);
+    }
+
+    #[inline(always)]
+    pub fn write_ivalue(&mut self, v: ivalue) {
+        self.content.extend(&ivalue::to_ne_bytes(v))
+    }
+
+    #[inline(always)]
+    pub fn write_usize(&mut self, v: usize) {
+        self.content.extend(&usize::to_ne_bytes(v))
+    }    
+
     pub fn write(&mut self, bytes: &[u8]) {
         self.content.extend(bytes)
     }
 
-    pub fn write_ivalue(&mut self, v: ivalue) {
-        self.write(&ivalue::to_ne_bytes(v))
-    }
-
-    pub fn write_usize(&mut self, v: usize) {
-        self.write(&usize::to_ne_bytes(v))
-    }
-
-    pub fn read_usize(&self, offset: usize) -> usize {
-        let size = size_of::<usize>();
-        let slice = &self.content[offset..offset + size];
-        usize::from_ne_bytes(slice.try_into().expect("read_usize incorrect slice size"))
-    }
-
-    pub fn read_fvalue(&self, offset: usize) -> fvalue {
-        let slice = &self.content[offset..offset + FVALUE_SIZE];
-        fvalue::from_ne_bytes(slice.try_into().expect("read_fvalue incorrect slice size"))
-    }
-
     pub fn write_fvalue(&mut self, v: fvalue) {
         self.write(&fvalue::to_ne_bytes(v))
-    }
-
-    pub fn write_op(&mut self, op: &Op) {       
-        let op_val = Op::to_ne_bytes(op);
-        self.write(&op_val)
-    }
-
-    pub fn write_bool(&mut self, v: bool) {
-        let a = if v { 1 as u8 } else { 0 as u8 };
-        self.write(&[a]);
     }
 
     pub fn add_string(&mut self, text: String) -> ivalue {
