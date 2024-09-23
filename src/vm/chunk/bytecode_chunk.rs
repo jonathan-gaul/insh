@@ -1,4 +1,4 @@
-use crate::{vm::op::Op, vm::value::{fvalue, ivalue, FVALUE_SIZE}};
+use crate::{vm::op::Op, vm::value::ivalue};
 
 #[derive(Debug, Clone)]
 pub struct ByteCodeChunk {
@@ -24,12 +24,6 @@ impl ByteCodeChunk {
     }
 
     #[inline(always)]
-    pub fn write_bool(&mut self, v: bool) {
-        let a = if v { 1 as u8 } else { 0 as u8 };
-        self.content.extend(&[a]);
-    }
-
-    #[inline(always)]
     pub fn write_ivalue(&mut self, v: ivalue) {
         self.content.extend(&ivalue::to_ne_bytes(v))
     }
@@ -37,14 +31,6 @@ impl ByteCodeChunk {
     #[inline(always)]
     pub fn write_usize(&mut self, v: usize) {
         self.content.extend(&usize::to_ne_bytes(v))
-    }    
-
-    pub fn write(&mut self, bytes: &[u8]) {
-        self.content.extend(bytes)
-    }
-
-    pub fn write_fvalue(&mut self, v: fvalue) {
-        self.write(&fvalue::to_ne_bytes(v))
     }
 
     pub fn add_string(&mut self, text: String) -> ivalue {
