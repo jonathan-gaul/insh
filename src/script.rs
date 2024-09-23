@@ -25,15 +25,15 @@ pub fn run_script(vm: &mut Vm, name: String) -> Result<()> {
         Err(e) => {
             println!("compile error: {:?}", e)
         }
-        Ok(_) => {}
-    }
-
-    let chunk = compiler.into_chunk();
-    match vm.run(chunk, EvaluateContext::None) {
-        Err(e) => {
-            println!("runtime error: {:?}", e)
+        Ok(_) => {    
+            let chunk = compiler.into_chunk();
+            match vm.run(chunk, EvaluateContext::None) {
+                Err(e) => {
+                    println!("runtime error: {:?}", e)
+                }
+                Ok(_) => {}
+            };
         }
-        Ok(_) => {}
     };
 
     Ok(())

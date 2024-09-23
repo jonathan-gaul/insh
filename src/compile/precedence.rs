@@ -61,6 +61,7 @@ impl ParseRule {
             TokenType::Let => Some(Compiler::let_var),
             TokenType::Pin => Some(Compiler::pin_var),
             TokenType::If => Some(Compiler::if_),
+            TokenType::While => Some(Compiler::while_),
             _ => None,
         }
     }
@@ -72,8 +73,8 @@ impl ParseRule {
             TokenType::Slash => Some(Compiler::binary),
             TokenType::Star => Some(Compiler::binary),
             TokenType::Pipe => Some(Compiler::binary),            
-            TokenType::And => Some(Compiler::and_),
-            TokenType::Or => Some(Compiler::or_),
+            TokenType::And => Some(Compiler::and),
+            TokenType::Or => Some(Compiler::or),
             _ => None,
         }
     }

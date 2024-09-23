@@ -47,17 +47,15 @@ pub fn interactive() -> Result<()> {
                         println!("error: {:?}", e)
                     }
                     Ok(_) => {
-                        println!("compiled")
-                    }
-                }
-
-                let chunk = compiler.into_chunk();
-                match vm.run(chunk, EvaluateContext::None) {
-                    Err(e) => {
-                        println!("runtime error: {:?}", e)
-                    }
-                    Ok(value) => {
-                        println!("{}", value);
+                        let chunk = compiler.into_chunk();
+                        match vm.run(chunk, EvaluateContext::None) {
+                            Err(e) => {
+                                println!("runtime error: {:?}", e)
+                            }
+                            Ok(value) => {
+                                println!("{}", value);
+                            }
+                        };
                     }
                 };
             }
