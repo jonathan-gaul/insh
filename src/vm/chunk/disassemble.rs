@@ -59,6 +59,7 @@ impl ByteCodeChunk {
             (Op::Command, ("CMD", ByteCodeChunk::disassemble_simple)),
             (Op::BranchIfFalse, ("BIF", ByteCodeChunk::disassemble_1::<usize>)),
             (Op::Branch, ("BRA", ByteCodeChunk::disassemble_1::<usize>)),
+            (Op::BranchBack, ("BRB", ByteCodeChunk::disassemble_1::<usize>)),
             (Op::SysCall, ("SYS", ByteCodeChunk::disassemble_simple)),
             (Op::BeginScope, ("BSC", ByteCodeChunk::disassemble_simple)),
             (Op::EndScope, ("ESC", ByteCodeChunk::disassemble_simple)),

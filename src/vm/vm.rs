@@ -358,6 +358,11 @@ impl Vm {
                     self.ip = self.ip.wrapping_add(dist);
                 }
 
+                Op::BranchBack => {
+                    let dist = self.read_as::<usize>();
+                    self.ip = self.ip.wrapping_sub(dist);
+                }
+
                 x => {
                     let offset = self.ip.wrapping_sub(self.chunk.content.as_ptr() as usize);
                     println!("unknown op: {:?} at {:08}", x, offset as usize);

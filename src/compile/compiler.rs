@@ -335,12 +335,16 @@ impl Compiler {
 
     pub(super) fn while_(&mut self, _: bool) -> Result<(), CompileError> {
 
+        let start_offset = self.chunk.content.len();
+
         self.expression()?;
 
         let end_offset = self.emit_branch(&Op::BranchIfFalse);
         self.chunk.write_op(&Op::Pop);
         
         self.expression()?;
+
+        self.emit_loop(start_offset);
 
         self.patch_branch(end_offset);
 

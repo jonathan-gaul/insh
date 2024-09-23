@@ -1,5 +1,5 @@
 use crate::vm::op::Op;
-use crate::vm::value::{ivalue, fvalue};
+use crate::vm::value::{fvalue, ivalue, IVALUE_SIZE};
 
 use super::compiler::Compiler;
 
@@ -51,5 +51,13 @@ impl Compiler {
         self.chunk.write_usize(usize::MAX);
         
         offset
+    }
+
+    pub(super) fn emit_loop(&mut self, start_offset: usize) {
+        self.chunk.write_op(&Op::BranchBack);
+
+        let offset = self.chunk.content.len() - start_offset + IVALUE_SIZE;
+        
+        self.chunk.write_usize(offset);
     }
 }

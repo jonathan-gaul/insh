@@ -32,6 +32,7 @@ pub enum Op {
 
     Branch = 96,
     BranchIfFalse = 97,
+    BranchBack = 98,
 
     SysCall = 128,
 
@@ -79,6 +80,10 @@ impl Op {
             x if x == Op::EndScope as u8 => Op::EndScope,
 
             x if x == Op::Command as u8 => Op::Command,
+
+            x if x == Op::Branch as u8 => Op::Branch,
+            x if x == Op::BranchIfFalse as u8 => Op::BranchIfFalse,
+            x if x == Op::BranchBack as u8 => Op::BranchBack,
 
             x if x == Op::SysCall as u8 => Op::SysCall,
             _ => Op::Unknown,
