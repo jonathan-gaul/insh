@@ -27,6 +27,7 @@ pub enum Op {
     Divide = 52,
     Pipe = 53,
     Swap = 54,
+    Equal = 55,
 
     Command = 64,
 
@@ -75,6 +76,7 @@ impl Op {
             x if x == Op::Divide as u8 => Op::Divide,
             x if x == Op::Pipe as u8 => Op::Pipe,
             x if x == Op::Swap as u8 => Op::Swap,
+            x if x == Op::Equal as u8 => Op::Equal,
 
             x if x == Op::BeginScope as u8 => Op::BeginScope,
             x if x == Op::EndScope as u8 => Op::EndScope,

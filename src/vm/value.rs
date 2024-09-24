@@ -3,9 +3,9 @@ use std::collections::HashMap;
 pub use i32 as ivalue;
 pub const IVALUE_SIZE: usize = size_of::<ivalue>();
 
-pub use i64 as fvalue;
+pub use f64 as fvalue;
 
-use super::chunk::bytecode_chunk::ByteCodeChunk;
+use super::{chunk::bytecode_chunk::ByteCodeChunk, vm::VmError};
 pub const FVALUE_SIZE: usize = size_of::<fvalue>();
 
 #[derive(Debug, Clone)]
@@ -69,10 +69,51 @@ impl Value {
 
     pub fn to_native_bool(&self) -> bool {
         match self {
-            Value::None | Value::Int(0) | Value::Float(0) | Value::Bool(false) | Value::Command(_, _) => false,
+            Value::None | Value::Int(0) | Value::Float(0.0) | Value::Bool(false) | Value::Command(_, _) => false,
             Value::String(x) => x.len() != 0,
             Value::Map(x) => x.len() != 0,
             _ => true
         }
     }
+
+    pub fn to_fvalue(&self) -> Result<fvalue, VmError> {
+        match self {
+            Value::None => Ok(0.0),
+            Value::String(v) => match (*v).parse::<fvalue>() {
+                Ok(x) => Ok(x),
+                Err(_) => return Err(VmError::InvalidValue),
+            },
+            Value::Int(x) => Ok(*x as fvalue),
+            Value::Float(x) => Ok(*x),
+            Value::Map(_) => return Err(VmError::InvalidOperation),
+            Value::Command(..) => return Err(VmError::InvalidOperation),
+            Value::Bool(x) => Ok(match x {
+                true => 1,
+                false => 0,
+            } as fvalue),
+            Value::Function(..) => return Err(VmError::InvalidOperation),
+        }
+    }
+
+    pub fn to_ivalue(&self) -> Result<ivalue, VmError> {
+        match self {
+            Value::None => Ok(0),
+            Value::String(v) => match (*v).parse::<ivalue>() {
+                Ok(x) => Ok(x),
+                Err(_) => return Err(VmError::InvalidValue),
+            },
+            Value::Int(x) => Ok(*x),
+            Value::Float(x) => Ok(*x as ivalue),
+            Value::Map(_) => return Err(VmError::InvalidOperation),
+            Value::Command(..) => return Err(VmError::InvalidOperation),
+            Value::Bool(x) => Ok(match x {
+                true => 1,
+                false => 0,
+            }),
+            Value::Function(..) => return Err(VmError::InvalidOperation),
+        }
+    }
+
+
+
 }

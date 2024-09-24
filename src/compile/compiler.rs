@@ -112,6 +112,7 @@ impl Compiler {
             TokenType::Star => self.emit_op(Op::Multiply),
             TokenType::Slash => self.emit_op(Op::Divide),
             TokenType::Pipe => self.emit_op(Op::Pipe),
+            TokenType::EqualEqual => self.emit_op(Op::Equal),
             _ => {}
         }
 

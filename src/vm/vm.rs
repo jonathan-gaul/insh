@@ -47,7 +47,7 @@ impl Vm {
     fn peek_stack(&self, _: usize) -> Value {
         if let Some(last) = self.stack.last() {
             last.clone()
-        } else {        
+        } else {
             panic!(
                 "stack underflow at {:08}",
                 (self.ip.wrapping_sub(self.chunk.content.as_ptr() as usize) as usize)
@@ -114,40 +114,25 @@ impl Vm {
                 Op::Add => match self.pop_stack() {
                     Value::None => match self.pop_stack() {
                         Value::None => self.push_stack(Value::Int(0)),
-                        Value::Int(y) => self.push_stack(Value::Int(y + 0)),
-                        Value::Float(y) => self.push_stack(Value::Float(y + 0)),
+                        Value::Int(y) => self.push_stack(Value::Int(y)),
+                        Value::Float(y) => self.push_stack(Value::Float(y)),
                         Value::String(v) => match (*v).parse::<ivalue>() {
-                            Ok(y) => self.push_stack(Value::Int(y + 0)),
+                            Ok(y) => self.push_stack(Value::Int(y)),
                             Err(_) => return Err(VmError::InvalidValue),
                         },
                         _ => return Err(VmError::InvalidOperation),
                     },
-                    Value::Int(x) => match self.pop_stack() {
-                        Value::None => self.push_stack(Value::Int(x)),
-                        Value::Int(y) => self.push_stack(Value::Int(y + x)),
-                        Value::Float(y) => self.push_stack(Value::Float(y + x as fvalue)),
-                        Value::String(v) => match (*v).parse::<ivalue>() {
-                            Ok(y) => self.push_stack(Value::Int(y + x)),
-                            Err(_) => return Err(VmError::InvalidValue),
-                        },
-                        _ => return Err(VmError::InvalidOperation),
+                    Value::Int(x) => {
+                        let y = self.pop_stack().to_ivalue()?;
+                        self.push_stack(Value::Int(y + x));
                     },
-                    Value::Float(x) => match self.pop_stack() {
-                        Value::None => self.push_stack(Value::Float(x)),
-                        Value::Int(y) => self.push_stack(Value::Float(y as fvalue + x)),
-                        Value::Float(y) => self.push_stack(Value::Float(y + x)),
-                        Value::String(v) => match (*v).parse::<fvalue>() {
-                            Ok(y) => self.push_stack(Value::Float(y + x)),
-                            Err(_) => return Err(VmError::InvalidValue),
-                        },
-                        _ => return Err(VmError::InvalidOperation),
+                    Value::Float(x) => {
+                        let y = self.pop_stack().to_fvalue()?;
+                        self.push_stack(Value::Float(y + x));
                     },
-                    Value::String(x) => match self.pop_stack() {
-                        Value::None => self.push_stack(Value::String(x)),
-                        Value::Int(y) => self.push_stack(string_value!("{:?}{:?}", y, x)),
-                        Value::Float(y) => self.push_stack(string_value!("{:?}{:?}", y, x)),
-                        Value::String(y) => self.push_stack(Value::String(y + &x)),
-                        _ => return Err(VmError::InvalidOperation),
+                    Value::String(x) => {
+                        let y = self.pop_stack().to_native_string();
+                        self.push_stack(Value::String(y + &x));
                     },
                     _ => return Err(VmError::InvalidOperation),
                 },
@@ -156,28 +141,17 @@ impl Vm {
                     Value::None => match self.pop_stack() {
                         Value::None => self.push_stack(Value::None),
                         Value::Int(_) => self.push_stack(Value::Int(0)),
-                        Value::Float(_) => self.push_stack(Value::Float(0)),
+                        Value::Float(_) => self.push_stack(Value::Float(0.0)),
                         Value::String(_) => self.push_stack(Value::None),
                         _ => return Err(VmError::InvalidOperation),
                     },
-                    Value::Int(x) => match self.pop_stack() {
-                        Value::None => self.push_stack(Value::Int(0)),
-                        Value::Int(y) => self.push_stack(Value::Int(y * x)),
-                        Value::Float(y) => self.push_stack(Value::Float(y * x as fvalue)),
-                        Value::String(y) => {
-                            let s = y.repeat(x as usize);
-                            self.push_stack(Value::String(s))
-                        }
-                        _ => return Err(VmError::InvalidOperation),
+                    Value::Int(x) => {
+                        let y = self.pop_stack().to_ivalue()?;
+                        self.push_stack(Value::Int(y * x));
                     },
-                    Value::Float(x) => match self.pop_stack() {
-                        Value::None => self.push_stack(Value::Int(0)),
-                        Value::Int(y) => self.push_stack(Value::Float(y as fvalue * x)),
-                        Value::Float(y) => self.push_stack(Value::Float(y * x)),
-                        Value::String(y) => {
-                            self.push_stack(Value::String(y.repeat(x as usize)));
-                        }
-                        _ => return Err(VmError::InvalidOperation),
+                    Value::Float(x) => {
+                        let y = self.pop_stack().to_fvalue()?;
+                        self.push_stack(Value::Float(y * x));
                     },
                     Value::String(x) => match self.pop_stack() {
                         Value::None => self.push_stack(Value::Int(0)),
@@ -196,32 +170,20 @@ impl Vm {
                     Value::None => match self.pop_stack() {
                         Value::None => self.push_stack(Value::None),
                         Value::Int(y) => self.push_stack(Value::Int(y - 0)),
-                        Value::Float(y) => self.push_stack(Value::Float(y - 0)),
+                        Value::Float(y) => self.push_stack(Value::Float(y - 0.0)),
                         Value::String(v) => match (*v).parse::<ivalue>() {
                             Ok(y) => self.push_stack(Value::Int(y - 0)),
                             Err(_) => return Err(VmError::InvalidValue),
                         },
                         _ => return Err(VmError::InvalidOperation),
                     },
-                    Value::Int(x) => match self.pop_stack() {
-                        Value::None => self.push_stack(Value::Int(0 - x)),
-                        Value::Int(y) => self.push_stack(Value::Int(y - x)),
-                        Value::Float(y) => self.push_stack(Value::Float(y - x as fvalue)),
-                        Value::String(v) => match (*v).parse::<ivalue>() {
-                            Ok(y) => self.push_stack(Value::Int(y - x)),
-                            Err(_) => return Err(VmError::InvalidValue),
-                        },
-                        _ => return Err(VmError::InvalidOperation),
+                    Value::Int(x) => {
+                        let y = self.pop_stack().to_ivalue()?;
+                        self.push_stack(Value::Int(0 - x));
                     },
-                    Value::Float(x) => match self.pop_stack() {
-                        Value::None => self.push_stack(Value::Float(0 - x)),
-                        Value::Int(y) => self.push_stack(Value::Float(y as fvalue - x)),
-                        Value::Float(y) => self.push_stack(Value::Float(y - x)),
-                        Value::String(v) => match (*v).parse::<fvalue>() {
-                            Ok(y) => self.push_stack(Value::Float(y - x)),
-                            Err(_) => return Err(VmError::InvalidValue),
-                        },
-                        _ => return Err(VmError::InvalidOperation),
+                    Value::Float(x) => {
+                        let y = self.pop_stack().to_fvalue()?;
+                        self.push_stack(Value::Float(y - x));
                     },
                     Value::String(x) => match self.pop_stack() {
                         Value::None => self.push_stack(Value::String("".to_owned())),
@@ -250,28 +212,46 @@ impl Vm {
 
                 Op::Divide => match self.pop_stack() {
                     Value::None => return Err(VmError::InvalidOperation),
-                    Value::Int(x) => match self.pop_stack() {
-                        Value::None => self.push_stack(Value::Int(0 / x)),
-                        Value::Int(y) => self.push_stack(Value::Int(y / x)),
-                        Value::Float(y) => self.push_stack(Value::Float(y / x as fvalue)),
-                        Value::String(v) => match (*v).parse::<ivalue>() {
-                            Ok(y) => self.push_stack(Value::Int(y / x)),
-                            Err(_) => return Err(VmError::InvalidValue),
-                        },
-                        _ => return Err(VmError::InvalidOperation),
+                    Value::Int(x) => {
+                        let y = self.pop_stack().to_ivalue()?;
+                        self.push_stack(Value::Int(y / x));
                     },
-                    Value::Float(x) => match self.pop_stack() {
-                        Value::None => self.push_stack(Value::Float(0 / x)),
-                        Value::Int(y) => self.push_stack(Value::Float(y as fvalue / x)),
-                        Value::Float(y) => self.push_stack(Value::Float(y / x)),
-                        Value::String(v) => match (*v).parse::<fvalue>() {
-                            Ok(y) => self.push_stack(Value::Float(y / x)),
-                            Err(_) => return Err(VmError::InvalidValue),
-                        },
-                        _ => return Err(VmError::InvalidOperation),
+                    Value::Float(x) => {
+                        let y = self.pop_stack().to_fvalue()?;
+                        self.push_stack(Value::Float(y / x));
                     },
                     _ => return Err(VmError::InvalidOperation),
                 },
+
+                Op::Equal => {
+                    let result = match self.pop_stack() {
+                        Value::None => match self.pop_stack() {
+                            Value::None => true,
+                            _ => false
+                        },
+                        Value::Int(x) => {
+                            let y = self.pop_stack().to_ivalue()?;
+                            y == x
+                        },
+                        Value::Float(x) => {
+                            let y = self.pop_stack().to_fvalue()?;
+                            y == x
+                        },
+                        Value::String(x) => {
+                            let y = self.pop_stack().to_native_string();
+                            y == x
+                        },
+                        Value::Bool(x) => {
+                            let y = self.pop_stack().to_native_bool();
+                            y == x
+                        },
+                        Value::Map(_) => false,
+                        Value::Command(..) => return Err(VmError::InvalidOperation),
+                        Value::Function(..) => return Err(VmError::InvalidOperation),
+                    };
+
+                    self.push_stack(Value::Bool(result));
+                }
 
                 Op::Command => {
                     let cmd = self.read_string_const();

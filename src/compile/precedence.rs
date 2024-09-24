@@ -75,6 +75,7 @@ impl ParseRule {
             TokenType::Pipe => Some(Compiler::binary),            
             TokenType::And => Some(Compiler::and),
             TokenType::Or => Some(Compiler::or),
+            TokenType::EqualEqual => Some(Compiler::binary),
             _ => None,
         }
     }
@@ -86,6 +87,7 @@ impl ParseRule {
             TokenType::Equal | TokenType::QuestionEqual => Precedence::Assignment,
             TokenType::Pipe => Precedence::Primary,
             TokenType::And => Precedence::And,
+            TokenType::EqualEqual => Precedence::Equality,
             _ => Precedence::None,
         }
     }
