@@ -124,6 +124,7 @@ impl Compiler {
         while !self.check(TokenType::CloseBrace) && !self.check(TokenType::EndOfFile) {
             self.expression()?;
         }
+        self.consume(TokenType::CloseBrace)?;
         self.end_scope();
         self.emit_end_scope();
         Ok(())
