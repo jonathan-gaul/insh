@@ -34,12 +34,12 @@ impl ByteCodeChunk {
         self.content.extend(&usize::to_ne_bytes(v))
     }
 
-    pub fn add_string(&mut self, text: String) -> ivalue {
+    pub fn add_string(&mut self, text: String) -> usize {
         match self.strings.iter().position(|s| s.eq(&text)) {
-            Some(id) => id as ivalue,
+            Some(id) => id,
             None => {
                 self.strings.push(text);
-                (self.strings.len() - 1) as ivalue
+                (self.strings.len() - 1)
             }
         }
     }

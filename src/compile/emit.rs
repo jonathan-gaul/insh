@@ -21,7 +21,7 @@ impl Compiler {
         if let Value::Function(_, _, chunk) = &mut self.function {
             let constant_id = chunk.add_string(name);
             chunk.write_op(op);
-            chunk.write_ivalue(constant_id);
+            chunk.write_usize(constant_id);
         }
     }
 
@@ -53,14 +53,14 @@ impl Compiler {
     }
 
     #[inline(always)]
-    pub(super) fn emit_string_constant(&mut self, v: String) -> ivalue {
+    pub(super) fn emit_string_constant(&mut self, v: String) -> usize {
         if let Value::Function(_, _, chunk) = &mut self.function {
             let constant_id = chunk.add_string(v);
             chunk.write_op(Op::StringConstant);
-            chunk.write_ivalue(constant_id);
+            chunk.write_usize(constant_id);
             constant_id
         } else {
-            -1
+            0
         }
     }
 
@@ -75,7 +75,7 @@ impl Compiler {
         if let Value::Function(_, _, chunk) = &mut self.function {
             let constant_id = chunk.add_string(cmd);
             chunk.write_op(Op::Command);
-            chunk.write_ivalue(constant_id);
+            chunk.write_usize(constant_id);
         }
     }
 
@@ -84,7 +84,7 @@ impl Compiler {
         if let Value::Function(_, _, chunk) = &mut self.function {
             let constant_id = chunk.add_string(call);
             chunk.write_op(Op::SysCall);
-            chunk.write_ivalue(constant_id);
+            chunk.write_usize(constant_id);
         }
     }
 

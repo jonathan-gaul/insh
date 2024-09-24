@@ -27,8 +27,8 @@ impl ByteCodeChunk {
     }
 
     fn disassemble_string_const(&self, reader: &mut ByteCodeChunkReader, name: &str) -> Result<String, DisassembleError> {
-        if let Some(word) = reader.next::<ivalue>() {
-            Ok(format!("{} {} // \"{}\"", name, word, self.get_string(word as usize)))
+        if let Some(word) = reader.next::<usize>() {
+            Ok(format!("{} {} // \"{}\"", name, word, self.get_string(word)))
         } else {
             Err(DisassembleError::ChunkTooSmall)
         }
