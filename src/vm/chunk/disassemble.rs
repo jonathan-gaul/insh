@@ -56,7 +56,7 @@ impl ByteCodeChunk {
             (Op::Pipe, ("PIP", ByteCodeChunk::disassemble_simple)),
             (Op::Swap, ("SWP", ByteCodeChunk::disassemble_simple)),
             (Op::Negate, ("NEG", ByteCodeChunk::disassemble_simple)),
-            (Op::Command, ("CMD", ByteCodeChunk::disassemble_simple)),
+            (Op::Command, ("CMD", ByteCodeChunk::disassemble_string_const)),
             (Op::BranchIfFalse, ("BIF", ByteCodeChunk::disassemble_1::<usize>)),
             (Op::Branch, ("BRA", ByteCodeChunk::disassemble_1::<usize>)),
             (Op::BranchBack, ("BRB", ByteCodeChunk::disassemble_1::<usize>)),

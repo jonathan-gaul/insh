@@ -95,8 +95,8 @@ impl Vm {
                 }
 
                 Op::StringConstant => {
-                    let string_id = self.read_as::<ivalue>();
-                    let s = self.chunk.get_string(string_id as usize).to_owned();
+                    let string_id = self.read_as::<usize>();
+                    let s = self.chunk.get_string(string_id).to_owned();
                     self.push_stack(Value::String(s))
                 }
 
@@ -274,18 +274,16 @@ impl Vm {
                 },
 
                 Op::Command => {
-                    if let Value::String(cmd) = self.pop_stack() {
-                        if let Value::Int(arg_count) = self.pop_stack() {
-                            let mut args = Vec::new();
-                            for _ in 0..arg_count {
-                                args.push(self.pop_stack());
-                            }
-                            args.reverse();
+                    let cmd = self.read_string_const();
 
-                            self.push_stack(Value::Command(cmd, args));
-                        } else {
-                            return Err(VmError::InvalidOperation);
+                    if let Value::Int(arg_count) = self.pop_stack() {
+                        let mut args = Vec::new();
+                        for _ in 0..arg_count {
+                            args.push(self.pop_stack());
                         }
+                        args.reverse();
+
+                        self.push_stack(Value::Command(cmd, args));
                     } else {
                         return Err(VmError::InvalidOperation);
                     }
