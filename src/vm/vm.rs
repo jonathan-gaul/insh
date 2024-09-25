@@ -1,12 +1,12 @@
 use std::ptr;
 
-use crate::{
-    string_value,
-    vm::evaluate::EvaluateContext,
-};
+use crate::{string_value, vm::evaluate::EvaluateContext};
 
 use super::{
-    chunk::bytecode_chunk::ByteCodeChunk, local::{Scope, ScopeSearch}, op::Op, value::{fvalue, ivalue, Value}
+    chunk::bytecode_chunk::ByteCodeChunk,
+    local::{Scope, ScopeSearch},
+    op::Op,
+    value::{fvalue, ivalue, Value},
 };
 
 #[derive(Debug)]
@@ -129,15 +129,15 @@ impl Vm {
                     Value::Int(x) => {
                         let y = self.pop_stack().to_ivalue()?;
                         self.push_stack(Value::Int(y + x));
-                    },
+                    }
                     Value::Float(x) => {
                         let y = self.pop_stack().to_fvalue()?;
                         self.push_stack(Value::Float(y + x));
-                    },
+                    }
                     Value::String(x) => {
                         let y = self.pop_stack().to_native_string();
                         self.push_stack(Value::String(y + &x));
-                    },
+                    }
                     _ => return Err(VmError::InvalidOperation),
                 },
 
@@ -152,11 +152,11 @@ impl Vm {
                     Value::Int(x) => {
                         let y = self.pop_stack().to_ivalue()?;
                         self.push_stack(Value::Int(y * x));
-                    },
+                    }
                     Value::Float(x) => {
                         let y = self.pop_stack().to_fvalue()?;
                         self.push_stack(Value::Float(y * x));
-                    },
+                    }
                     Value::String(x) => match self.pop_stack() {
                         Value::None => self.push_stack(Value::Int(0)),
                         Value::Int(y) => {
@@ -184,11 +184,11 @@ impl Vm {
                     Value::Int(x) => {
                         let y = self.pop_stack().to_ivalue()?;
                         self.push_stack(Value::Int(0 - x));
-                    },
+                    }
                     Value::Float(x) => {
                         let y = self.pop_stack().to_fvalue()?;
                         self.push_stack(Value::Float(y - x));
-                    },
+                    }
                     Value::String(x) => match self.pop_stack() {
                         Value::None => self.push_stack(Value::String("".to_owned())),
                         Value::Int(y) => {
@@ -219,11 +219,11 @@ impl Vm {
                     Value::Int(x) => {
                         let y = self.pop_stack().to_ivalue()?;
                         self.push_stack(Value::Int(y / x));
-                    },
+                    }
                     Value::Float(x) => {
                         let y = self.pop_stack().to_fvalue()?;
                         self.push_stack(Value::Float(y / x));
-                    },
+                    }
                     _ => return Err(VmError::InvalidOperation),
                 },
 
@@ -231,24 +231,24 @@ impl Vm {
                     let result = match self.pop_stack() {
                         Value::None => match self.pop_stack() {
                             Value::None => true,
-                            _ => false
+                            _ => false,
                         },
                         Value::Int(x) => {
                             let y = self.pop_stack().to_ivalue()?;
                             y == x
-                        },
+                        }
                         Value::Float(x) => {
                             let y = self.pop_stack().to_fvalue()?;
                             y == x
-                        },
+                        }
                         Value::String(x) => {
                             let y = self.pop_stack().to_native_string();
                             y == x
-                        },
+                        }
                         Value::Bool(x) => {
                             let y = self.pop_stack().to_native_bool();
                             y == x
-                        },
+                        }
                         Value::Map(_) => false,
                         Value::Command(..) => return Err(VmError::InvalidOperation),
                         Value::Function(..) => return Err(VmError::InvalidOperation),
@@ -332,7 +332,6 @@ impl Vm {
                     if !val.to_native_bool() {
                         self.ip = self.ip.wrapping_add(dist);
                     }
-
                 }
 
                 Op::Branch => {

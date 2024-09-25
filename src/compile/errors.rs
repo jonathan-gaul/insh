@@ -1,4 +1,3 @@
-
 use crate::scan::{
     errors::ScanError,
     tokens::{Token, TokenType},

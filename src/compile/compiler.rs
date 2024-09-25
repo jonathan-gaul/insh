@@ -5,7 +5,11 @@ use crate::{
         scanner::Scanner,
         tokens::{Token, TokenType},
     },
-    vm::{chunk::bytecode_chunk::ByteCodeChunk, op::Op, value::{fvalue, ivalue, Value}},
+    vm::{
+        chunk::bytecode_chunk::ByteCodeChunk,
+        op::Op,
+        value::{fvalue, ivalue, Value},
+    },
 };
 
 use super::{
@@ -280,7 +284,6 @@ impl Compiler {
     }
 
     pub(super) fn if_(&mut self, _: bool) -> Result<(), CompileError> {
-
         // if <expr>
         self.expression()?;
 
@@ -341,7 +344,6 @@ impl Compiler {
     }
 
     pub(super) fn while_(&mut self, _: bool) -> Result<(), CompileError> {
-
         let start_offset = self.current_offset();
 
         self.expression()?;
@@ -364,7 +366,7 @@ impl Compiler {
         if let Value::Function(_, _, chunk) = &mut self.function {
             let size = size_of::<usize>();
             let distance = current_offset - offset - size;
-            chunk.content[offset..offset+size].copy_from_slice(&usize::to_ne_bytes(distance));
+            chunk.content[offset..offset + size].copy_from_slice(&usize::to_ne_bytes(distance));
         }
     }
 

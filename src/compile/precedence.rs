@@ -72,7 +72,7 @@ impl ParseRule {
             TokenType::Plus => Some(Compiler::binary),
             TokenType::Slash => Some(Compiler::binary),
             TokenType::Star => Some(Compiler::binary),
-            TokenType::Pipe => Some(Compiler::binary),            
+            TokenType::Pipe => Some(Compiler::binary),
             TokenType::And => Some(Compiler::and),
             TokenType::Or => Some(Compiler::or),
             TokenType::EqualEqual => Some(Compiler::binary),

@@ -2,24 +2,20 @@ use std::ptr;
 
 use super::bytecode_chunk::ByteCodeChunk;
 
-
 pub(crate) struct ByteCodeChunkReader {
-
     first: *const u8,
     last: *const u8,
     ptr: *const u8,
-
 }
 
-impl ByteCodeChunkReader {    
-
+impl ByteCodeChunkReader {
     pub fn new(chunk: &ByteCodeChunk) -> Self {
         let ptr = chunk.content.as_ptr();
         let last = ptr.wrapping_add(chunk.content.len());
         ByteCodeChunkReader {
             first: ptr,
             ptr,
-            last
+            last,
         }
     }
 
@@ -37,7 +33,6 @@ impl ByteCodeChunkReader {
     }
 
     pub fn get_offset(&self) -> usize {
-        self.ptr.wrapping_sub(self.first as usize) as usize        
+        self.ptr.wrapping_sub(self.first as usize) as usize
     }
-
 }

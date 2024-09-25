@@ -1,6 +1,6 @@
 use super::value::Value;
-use std::process::Command;
 use crate::vm::value::ivalue;
+use std::process::Command;
 
 pub fn execute(cmd: String, args: Vec<Value>, capture: bool) -> (ivalue, String, String) {
     let mut command = Command::new(cmd);
@@ -20,7 +20,11 @@ pub fn execute(cmd: String, args: Vec<Value>, capture: bool) -> (ivalue, String,
         }
     } else {
         match command.status() {
-            Ok(s) => (s.code().unwrap_or(0) as ivalue, String::new(), String::new()),
+            Ok(s) => (
+                s.code().unwrap_or(0) as ivalue,
+                String::new(),
+                String::new(),
+            ),
             Err(_) => (-1, String::new(), String::new()),
         }
     }

@@ -69,10 +69,14 @@ impl Value {
 
     pub fn to_native_bool(&self) -> bool {
         match self {
-            Value::None | Value::Int(0) | Value::Float(0.0) | Value::Bool(false) | Value::Command(_, _) => false,
+            Value::None
+            | Value::Int(0)
+            | Value::Float(0.0)
+            | Value::Bool(false)
+            | Value::Command(_, _) => false,
             Value::String(x) => x.len() != 0,
             Value::Map(x) => x.len() != 0,
-            _ => true
+            _ => true,
         }
     }
 
@@ -113,7 +117,4 @@ impl Value {
             Value::Function(..) => return Err(VmError::InvalidOperation),
         }
     }
-
-
-
 }

@@ -190,7 +190,14 @@ impl Scanner {
 
         let token_type = match self.identifier_type() {
             TokenType::Identifier => TokenType::String,
-            TokenType::Is | TokenType::And | TokenType::Or | TokenType::For | TokenType::From | TokenType::Do | TokenType::If | TokenType::Else => TokenType::String,
+            TokenType::Is
+            | TokenType::And
+            | TokenType::Or
+            | TokenType::For
+            | TokenType::From
+            | TokenType::Do
+            | TokenType::If
+            | TokenType::Else => TokenType::String,
             other => other,
         };
 
