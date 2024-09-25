@@ -58,19 +58,20 @@ impl ByteCodeChunk {
             (Op::Swap, ("SWP", ByteCodeChunk::disassemble_simple)),
             (Op::Negate, ("NEG", ByteCodeChunk::disassemble_simple)),
             (Op::Command, ("CMD", ByteCodeChunk::disassemble_string_const)),
-            (Op::BranchIfFalse, ("BIF", ByteCodeChunk::disassemble_1::<usize>)),
+            (Op::BranchIfFalse, ("BRF", ByteCodeChunk::disassemble_1::<usize>)),
             (Op::Branch, ("BRA", ByteCodeChunk::disassemble_1::<usize>)),
             (Op::BranchBack, ("BRB", ByteCodeChunk::disassemble_1::<usize>)),
             (Op::SysCall, ("SYS", ByteCodeChunk::disassemble_simple)),
             (Op::BeginScope, ("BSC", ByteCodeChunk::disassemble_simple)),
-            (Op::EndScope, ("ESC", ByteCodeChunk::disassemble_simple)),            
+            (Op::EndScope, ("ESC", ByteCodeChunk::disassemble_simple)),
+            (Op::Equal, ("EQL", ByteCodeChunk::disassemble_simple)),
 
         ].into_iter().map(|(op, (name, func))| (op, (name, func as DisassembleFn))).collect();
 
         let mut output = String::new();
 
         while let Some(op) = reader.next::<Op>() {
-            output += &format!("{:08} [{:02x}] ", reader.get_offset(), op as u8);
+            output += &format!("{:08} [{:02x}] ", reader.get_offset() - size_of::<Op>(), op as u8);
             if let Some((name, func)) = op_funcs.get(&op) {
                 output += &func(self, &mut reader, name)?;
                 output += "\n";

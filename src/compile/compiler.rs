@@ -363,7 +363,7 @@ impl Compiler {
         let current_offset = self.current_offset();
         if let Value::Function(_, _, chunk) = &mut self.function {
             let size = size_of::<usize>();
-            let distance = current_offset - offset - size_of::<usize>();
+            let distance = current_offset - offset - size;
             chunk.content[offset..offset+size].copy_from_slice(&usize::to_ne_bytes(distance));
         }
     }
