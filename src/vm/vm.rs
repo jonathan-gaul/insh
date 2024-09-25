@@ -37,7 +37,7 @@ impl Vm {
     fn pop_stack(&mut self) -> Value {
         if self.stack.is_empty() {
             panic!(
-                "stack underflow at {:08}",
+                "stack pop underflow at {:08}",
                 (self.ip.wrapping_sub(self.chunk.content.as_ptr() as usize) as usize)
             )
         }
@@ -49,7 +49,7 @@ impl Vm {
             last.clone()
         } else {
             panic!(
-                "stack underflow at {:08}",
+                "stack peek underflow at {:08}",
                 (self.ip.wrapping_sub(self.chunk.content.as_ptr() as usize) as usize)
             )
         }
@@ -262,7 +262,7 @@ impl Vm {
 
                     if let Value::Int(arg_count) = self.pop_stack() {
                         let mut args = Vec::new();
-                        for _ in 0..arg_count {
+                        for i in 0..arg_count {
                             args.push(self.pop_stack());
                         }
                         args.reverse();

@@ -47,6 +47,9 @@ impl Vm {
     }
 
     pub fn end_scope(&mut self) {
+        if self.scopes.is_empty() {
+            panic!("scope stack underflow");
+        }
         self.scopes.pop();
     }
 

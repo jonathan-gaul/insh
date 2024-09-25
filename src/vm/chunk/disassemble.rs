@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::{vm::op::Op, vm::value::{ivalue, fvalue}};
+use crate::vm::{op::{Op, OP_SIZE}, value::{fvalue, ivalue}};
 
 use super::bytecode_chunk::ByteCodeChunk;
 use super::reader::ByteCodeChunkReader;
@@ -71,7 +71,7 @@ impl ByteCodeChunk {
         let mut output = String::new();
 
         while let Some(op) = reader.next::<Op>() {
-            output += &format!("{:08} [{:02x}] ", reader.get_offset() - size_of::<Op>(), op as u8);
+            output += &format!("{:08} [{:02x}] ", reader.get_offset() - OP_SIZE, op as u8);
             if let Some((name, func)) = op_funcs.get(&op) {
                 output += &func(self, &mut reader, name)?;
                 output += "\n";

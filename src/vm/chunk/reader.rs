@@ -36,13 +36,6 @@ impl ByteCodeChunkReader {
         }
     }
 
-    #[inline(always)]
-    pub fn skip(&mut self, distance: usize) {
-        unsafe {
-            self.ptr = self.ptr.add(distance);
-        }
-    }
-
     pub fn get_offset(&self) -> usize {
         self.ptr.wrapping_sub(self.first as usize) as usize        
     }
