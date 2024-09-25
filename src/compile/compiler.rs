@@ -122,6 +122,7 @@ impl Compiler {
     pub(super) fn block(&mut self, _: bool) -> Result<(), CompileError> {
         self.emit_begin_scope();
         self.begin_scope();
+        while let Ok(_) = self.consume(TokenType::EndOfLine) {}
         while !self.check(TokenType::CloseBrace) && !self.check(TokenType::EndOfFile) {
             self.expression()?;
         }
@@ -299,6 +300,8 @@ impl Compiler {
 
         if self.match_type(TokenType::Else)? {
             self.expression()?;
+        } else {
+            self.emit_none();
         }
 
         self.patch_branch(else_offset);

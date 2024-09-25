@@ -71,6 +71,11 @@ impl Compiler {
     }
 
     #[inline(always)]
+    pub(super) fn emit_none(&mut self) {
+        self.emit_op(Op::NoneConstant);
+    }
+
+    #[inline(always)]
     pub(super) fn emit_command(&mut self, cmd: String) {
         if let Value::Function(_, _, chunk) = &mut self.function {
             let constant_id = chunk.add_string(cmd);

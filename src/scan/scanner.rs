@@ -92,6 +92,7 @@ impl Scanner {
 
     fn identifier_type(&self) -> TokenType {
         match self.chars[self.start_offset] {
+            'a' => self.check_keyword(1, "nd", TokenType::And),
             'd' => self.check_keyword(1, "o", TokenType::Do),
             'e' => self.check_keyword(1, "lse", TokenType::Else),
             'f' => {
@@ -118,6 +119,7 @@ impl Scanner {
                 }
             }
             'l' => self.check_keyword(1, "et", TokenType::Let),
+            'o' => self.check_keyword(1, "r", TokenType::Or),
             'p' => {
                 if self.current_offset - self.start_offset > 1 {
                     match self.chars[self.start_offset + 1] {

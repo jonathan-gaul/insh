@@ -108,6 +108,8 @@ impl Display for TokenType {
                 TokenType::Plus => "Plus",
                 TokenType::Slash => "Slash",
                 TokenType::Star => "Star",
+                TokenType::And => "And",
+                TokenType::Or => "Or",
                 TokenType::OpenBracket => "OpenBracket",
                 TokenType::CloseBracket => "CloseBracket",
                 TokenType::OpenBrace => "OpenBrace",

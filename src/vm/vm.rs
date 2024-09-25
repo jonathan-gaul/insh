@@ -105,6 +105,10 @@ impl Vm {
                     self.push_stack(Value::Bool(v))
                 }
 
+                Op::NoneConstant => {
+                    self.push_stack(Value::None);
+                }
+
                 Op::Negate => match self.pop_stack() {
                     Value::Int(x) => self.push_stack(Value::Int(-x)),
                     Value::Float(x) => self.push_stack(Value::Float(-x)),

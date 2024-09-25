@@ -9,6 +9,7 @@ pub enum Op {
     FloatConstant = 9,
     StringConstant = 10,
     BoolConstant = 11,
+    NoneConstant = 12,
 
     Pop = 16,
 
@@ -60,6 +61,7 @@ impl Op {
             x if x == Op::IntConstant as u8 => Op::IntConstant,
             x if x == Op::FloatConstant as u8 => Op::FloatConstant,
             x if x == Op::StringConstant as u8 => Op::StringConstant,
+            x if x == Op::NoneConstant as u8 => Op::NoneConstant,
             x if x == Op::Pop as u8 => Op::Pop,
 
             x if x == Op::DefineLocal as u8 => Op::DefineLocal,

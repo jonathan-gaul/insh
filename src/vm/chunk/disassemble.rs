@@ -39,9 +39,10 @@ impl ByteCodeChunk {
 
         let op_funcs: HashMap<Op, (&str, DisassembleFn)> = [
             (Op::Return, ("RTS", ByteCodeChunk::disassemble_simple as DisassembleFn)),
-            (Op::IntConstant, ("CNI", ByteCodeChunk::disassemble_1::<ivalue>)),
-            (Op::FloatConstant, ("CNF", ByteCodeChunk::disassemble_1::<fvalue>)),
-            (Op::StringConstant, ("CNS", ByteCodeChunk::disassemble_string_const)),
+            (Op::IntConstant, ("INT", ByteCodeChunk::disassemble_1::<ivalue>)),
+            (Op::FloatConstant, ("FLT", ByteCodeChunk::disassemble_1::<fvalue>)),
+            (Op::StringConstant, ("STR", ByteCodeChunk::disassemble_string_const)),
+            (Op::NoneConstant, ("NUL", ByteCodeChunk::disassemble_simple)),
             (Op::Pop, ("POP", ByteCodeChunk::disassemble_simple)),
             (Op::GetEnv, ("GEV", ByteCodeChunk::disassemble_string_const)),
             (Op::SetEnv, ("SEV", ByteCodeChunk::disassemble_string_const)),
@@ -62,7 +63,7 @@ impl ByteCodeChunk {
             (Op::BranchBack, ("BRB", ByteCodeChunk::disassemble_1::<usize>)),
             (Op::SysCall, ("SYS", ByteCodeChunk::disassemble_simple)),
             (Op::BeginScope, ("BSC", ByteCodeChunk::disassemble_simple)),
-            (Op::EndScope, ("ESC", ByteCodeChunk::disassemble_simple)),
+            (Op::EndScope, ("ESC", ByteCodeChunk::disassemble_simple)),            
 
         ].into_iter().map(|(op, (name, func))| (op, (name, func as DisassembleFn))).collect();
 
