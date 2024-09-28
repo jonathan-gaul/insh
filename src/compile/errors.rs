@@ -7,7 +7,7 @@ use crate::scan::{
 pub enum CompileError {
     Unknown,
     NotImplemented,
-    MissingToken(TokenType, Token),
+    MissingToken(Vec<TokenType>, Token),
     UnknownUnaryOperator,
     MissingFrom,
     ParseError(),

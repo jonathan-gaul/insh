@@ -352,6 +352,10 @@ impl Scanner {
 
                     (_, '#') => while !self.is_at_end() && self.next_char() != '\n' {},
 
+                    (_, ';') => {
+                        return Ok(self.new_token(TokenType::Semicolon, None, None));
+                    }
+
                     (ScannerMode::Command, '(' | '"' | '@' | '$' | '-') => {
                         self.push_mode(ScannerMode::Expression)
                     }

@@ -37,6 +37,7 @@ pub enum TokenType {
 
     Question,
     Colon,
+    Semicolon,
     Pipe,
 
     Is,

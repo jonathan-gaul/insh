@@ -40,6 +40,10 @@ pub struct Compiler {
 impl Compiler {
     pub fn new(scanner: Scanner, chunk: ByteCodeChunk) -> Self {
         let function = Value::Function(String::new(), 0, chunk);
+        let local = LocalVariable {
+            name: Token::new(TokenType::String, "".to_string()),
+            depth: 0,
+        };
         Compiler {
             function,
             scanner,
@@ -48,7 +52,7 @@ impl Compiler {
 
             debug_output_chunk: true,
 
-            locals: Vec::new(),
+            locals: Vec::from([local]),
             local_count: 0,
             scope_depth: 0,
         }
@@ -72,11 +76,14 @@ impl Compiler {
         }
     }
 
-    pub(super) fn consume(&mut self, token_type: TokenType) -> Result<(), CompileError> {
-        if self.current.token_type() == token_type {
+    pub(super) fn consume(&mut self, token_types: &[TokenType]) -> Result<(), CompileError> {
+        if token_types.contains(&self.current.token_type()) {
             self.advance()
         } else {
-            Err(CompileError::MissingToken(token_type, self.current.clone()))
+            Err(CompileError::MissingToken(
+                token_types.to_vec(),
+                self.current.clone(),
+            ))
         }
     }
 
@@ -86,7 +93,7 @@ impl Compiler {
 
     pub(super) fn grouping(&mut self, _: bool) -> Result<(), CompileError> {
         self.expression()?;
-        self.consume(TokenType::CloseBracket)?;
+        self.consume(&[TokenType::CloseBracket])?;
         Ok(())
     }
 
@@ -126,11 +133,11 @@ impl Compiler {
     pub(super) fn block(&mut self, _: bool) -> Result<(), CompileError> {
         self.emit_begin_scope();
         self.begin_scope();
-        while let Ok(_) = self.consume(TokenType::EndOfLine) {}
+        while let Ok(_) = self.consume(&[TokenType::EndOfLine]) {}
         while !self.check(TokenType::CloseBrace) && !self.check(TokenType::EndOfFile) {
             self.expression()?;
         }
-        self.consume(TokenType::CloseBrace)?;
+        self.consume(&[TokenType::CloseBrace])?;
         self.end_scope();
         self.emit_end_scope();
         Ok(())
@@ -177,7 +184,7 @@ impl Compiler {
         self.expression()?;
 
         // from
-        self.consume(TokenType::From)?;
+        self.consume(&[TokenType::From])?;
 
         // <expr>
         self.expression()?;
@@ -288,7 +295,7 @@ impl Compiler {
         self.expression()?;
 
         // then
-        self.consume(TokenType::Then)?;
+        self.consume(&[TokenType::Then])?;
 
         let offset = self.emit_branch(Op::BranchIfFalse);
         self.emit_op(Op::Pop);
@@ -301,6 +308,9 @@ impl Compiler {
         self.patch_branch(offset);
         self.emit_op(Op::Pop);
 
+        while self.match_type(TokenType::EndOfLine)? {}
+
+        // else
         if self.match_type(TokenType::Else)? {
             self.expression()?;
         } else {
@@ -370,16 +380,17 @@ impl Compiler {
         }
     }
 
-    pub fn compile(&mut self) -> Result<(), CompileError> {
+    pub fn compile(&mut self) -> Result<&Value, CompileError> {
         self.advance()?;
 
         while !self.match_type(TokenType::EndOfFile)? {
-            while let Ok(_) = self.consume(TokenType::EndOfLine) {}
+            while let Ok(_) = self.consume(&[TokenType::EndOfLine]) {}
             self.expression()?;
-            match self.consume(TokenType::EndOfLine) {
-                Ok(_) => {}
-                Err(_) => self.consume(TokenType::EndOfFile)?,
-            };
+            self.consume(&[
+                TokenType::EndOfLine,
+                TokenType::EndOfFile,
+                TokenType::Semicolon,
+            ])?;
             if !self.check(TokenType::EndOfFile) {
                 self.emit_op(Op::Pop);
             }
@@ -387,11 +398,11 @@ impl Compiler {
         self.emit_return();
 
         if self.debug_output_chunk {
-            if let Value::Function(_, _, chunk) = &self.function {
-                println!("{}", chunk.display());
+            if let Value::Function(name, _, chunk) = &self.function {
+                println!("{}:\n{}", name, chunk.display());
             }
         }
 
-        Ok(())
+        Ok(&self.function)
     }
 }
