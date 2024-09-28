@@ -54,7 +54,7 @@ impl ParseRule {
             TokenType::Command => Some(Compiler::command),
             TokenType::True => Some(Compiler::true_literal),
             TokenType::False => Some(Compiler::false_literal),
-            TokenType::Parse => Some(Compiler::parse),
+            TokenType::Read => Some(Compiler::read),
             TokenType::EnvironmentVariable => Some(Compiler::env_var),
             TokenType::LocalVariable => Some(Compiler::local_var),
             TokenType::OpenBrace => Some(Compiler::block),

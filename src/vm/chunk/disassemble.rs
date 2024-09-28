@@ -114,7 +114,10 @@ impl ByteCodeChunk {
                 Op::BranchBack,
                 ("BRB", ByteCodeChunk::disassemble_1::<usize>),
             ),
-            (Op::SysCall, ("SYS", ByteCodeChunk::disassemble_simple)),
+            (
+                Op::SysCall,
+                ("SYS", ByteCodeChunk::disassemble_string_const),
+            ),
             (Op::BeginScope, ("BSC", ByteCodeChunk::disassemble_simple)),
             (Op::EndScope, ("ESC", ByteCodeChunk::disassemble_simple)),
             (Op::Equal, ("EQL", ByteCodeChunk::disassemble_simple)),

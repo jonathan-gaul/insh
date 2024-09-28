@@ -66,7 +66,7 @@ pub enum TokenType {
     And,
     Or,
     For,
-    Parse,
+    Read,
     From,
 }
 
@@ -148,7 +148,7 @@ impl Display for TokenType {
                 TokenType::For => "For",
                 TokenType::True => "True",
                 TokenType::False => "False",
-                TokenType::Parse => "Parse",
+                TokenType::Read => "Read",
                 TokenType::From => "From",
                 TokenType::Let => "Let",
                 TokenType::Pin => "Pin",

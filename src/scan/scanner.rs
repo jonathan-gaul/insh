@@ -120,17 +120,8 @@ impl Scanner {
             }
             'l' => self.check_keyword(1, "et", TokenType::Let),
             'o' => self.check_keyword(1, "r", TokenType::Or),
-            'p' => {
-                if self.current_offset - self.start_offset > 1 {
-                    match self.chars[self.start_offset + 1] {
-                        'a' => self.check_keyword(2, "rse", TokenType::Parse),
-                        'i' => self.check_keyword(2, "n", TokenType::Pin),
-                        _ => TokenType::Identifier,
-                    }
-                } else {
-                    TokenType::Identifier
-                }
-            }
+            'p' => self.check_keyword(1, "in", TokenType::Pin),
+            'r' => self.check_keyword(1, "ead", TokenType::Read),
             't' => {
                 if self.current_offset - self.start_offset > 1 {
                     match self.chars[self.start_offset + 1] {

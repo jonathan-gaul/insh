@@ -179,17 +179,17 @@ impl Compiler {
         Ok(())
     }
 
-    pub(super) fn parse(&mut self, _: bool) -> Result<(), CompileError> {
-        // parse <expr>
+    pub(super) fn read(&mut self, _: bool) -> Result<(), CompileError> {
+        // read <type>  (e.g. number, json, text)
         self.expression()?;
 
         // from
         self.consume(&[TokenType::From])?;
 
-        // <expr>
+        // <expr>  (e.g. 'file <x> or "str" etc')
         self.expression()?;
 
-        self.emit_sys_call("parse".to_owned());
+        self.emit_sys_call("read".to_owned());
 
         Ok(())
     }
