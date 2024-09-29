@@ -16,6 +16,7 @@ pub enum VmError {
     LocalAlreadyDefined,
     UndefinedLocal,
     PinnedLocal,
+    UnknownSysCall,
 }
 
 pub struct Vm {
@@ -26,15 +27,15 @@ pub struct Vm {
 }
 
 impl Vm {
-    fn reset_stack(&mut self) {
+    pub(super) fn reset_stack(&mut self) {
         self.stack.clear();
     }
 
-    fn push_stack(&mut self, v: Value) {
+    pub(super) fn push_stack(&mut self, v: Value) {
         self.stack.push(v);
     }
 
-    fn pop_stack(&mut self) -> Value {
+    pub(super) fn pop_stack(&mut self) -> Value {
         if self.stack.is_empty() {
             panic!(
                 "stack pop underflow at {:08}",
@@ -342,6 +343,14 @@ impl Vm {
                 Op::BranchBack => {
                     let dist = self.read_as::<usize>();
                     self.ip = self.ip.wrapping_sub(dist);
+                }
+
+                Op::SysCall => {
+                    let call = self.read_string_const();
+                    match call.as_str() {
+                        "read" => self.syscall_read()?,
+                        _ => return Err(VmError::UnknownSysCall),
+                    }
                 }
 
                 x => {
