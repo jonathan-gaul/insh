@@ -213,7 +213,7 @@ impl Scanner {
 
         while !self.is_at_end()
             && (self.current_char().is_alphabetic()
-                || self.current_char().is_alphabetic()
+                || self.current_char().is_numeric()
                 || self.current_char() == '_')
         {
             self.next_char();
