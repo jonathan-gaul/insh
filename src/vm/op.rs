@@ -37,6 +37,7 @@ pub enum Op {
     BranchBack = 98,
 
     SysCall = 128,
+    Function = 129,
 
     BeginScope = 224,
     EndScope = 225,

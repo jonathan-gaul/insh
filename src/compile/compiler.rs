@@ -1,4 +1,4 @@
-use std::mem;
+use std::mem::{self, take};
 
 use crate::{
     scan::{
@@ -247,7 +247,7 @@ impl Compiler {
             Op::GetEnv
         };
 
-        self.emit_var(op, env_name);
+        self.emit_var(op, &env_name);
         Ok(())
     }
 
@@ -259,7 +259,7 @@ impl Compiler {
         self.match_type(TokenType::Equal)?;
         self.expression()?;
 
-        self.emit_var(Op::DefineLocal, identifier);
+        self.emit_var(Op::DefineLocal, &identifier);
         Ok(())
     }
 
@@ -268,10 +268,17 @@ impl Compiler {
         self.advance()?;
 
         let identifier = self.previous.text.to_owned();
-        self.match_type(TokenType::Equal)?;
-        self.expression()?;
 
-        self.emit_var(Op::PinLocal, identifier);
+        if self.check(TokenType::Equal) {
+            // Set var and pin
+            self.match_type(TokenType::Equal)?;
+            self.expression()?;
+        } else {
+            // Pin current value
+            self.emit_var(Op::GetLocal, &identifier);
+        }
+
+        self.emit_var(Op::PinLocal, &identifier);
         Ok(())
     }
 
@@ -286,7 +293,7 @@ impl Compiler {
             Op::GetLocal
         };
 
-        self.emit_var(op, identifier);
+        self.emit_var(op, &identifier);
         Ok(())
     }
 
@@ -345,6 +352,17 @@ impl Compiler {
         Ok(())
     }
 
+    pub(super) fn function(&mut self, _: bool) -> Result<(), CompileError> {
+        // <expr> => <block>
+        let mut compiler = Compiler::new(take(&mut self.scanner), ByteCodeChunk::new());
+
+        let func = compiler.compile_to(TokenType::CloseBrace)?;
+
+        self.emit_function(func.clone());
+
+        Ok(())
+    }
+
     pub(super) fn current_offset(&self) -> usize {
         if let Value::Function(_, _, chunk) = &self.function {
             chunk.len()
@@ -380,18 +398,19 @@ impl Compiler {
         }
     }
 
-    pub fn compile(&mut self) -> Result<&Value, CompileError> {
+    pub fn compile_to(&mut self, tt: TokenType) -> Result<&Value, CompileError> {
         self.advance()?;
 
-        while !self.match_type(TokenType::EndOfFile)? {
+        while !self.match_type(tt)? {
             while let Ok(_) = self.consume(&[TokenType::EndOfLine]) {}
             self.expression()?;
             self.consume(&[
                 TokenType::EndOfLine,
                 TokenType::EndOfFile,
                 TokenType::Semicolon,
+                tt,
             ])?;
-            if !self.check(TokenType::EndOfFile) {
+            if !self.check(tt) {
                 self.emit_op(Op::Pop);
             }
         }
@@ -404,5 +423,11 @@ impl Compiler {
         }
 
         Ok(&self.function)
+    }
+}
+
+impl Into<Scanner> for Compiler {
+    fn into(self) -> Scanner {
+        self.scanner
     }
 }

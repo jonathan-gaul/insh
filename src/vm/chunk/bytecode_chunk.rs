@@ -1,9 +1,13 @@
-use crate::{vm::op::Op, vm::value::ivalue};
+use crate::vm::{
+    op::Op,
+    value::{ivalue, Value},
+};
 
 #[derive(Debug, Clone)]
 pub struct ByteCodeChunk {
     pub content: Vec<u8>,
     pub strings: Vec<String>,
+    pub functions: Vec<Value>,
 }
 
 impl ByteCodeChunk {
@@ -11,6 +15,7 @@ impl ByteCodeChunk {
         ByteCodeChunk {
             content: Vec::new(),
             strings: Vec::new(),
+            functions: Vec::new(),
         }
     }
 
@@ -34,14 +39,19 @@ impl ByteCodeChunk {
         self.content.extend(&usize::to_ne_bytes(v))
     }
 
-    pub fn add_string(&mut self, text: String) -> usize {
-        match self.strings.iter().position(|s| s.eq(&text)) {
+    pub fn add_string(&mut self, text: &String) -> usize {
+        match self.strings.iter().position(|s| s.eq(text)) {
             Some(id) => id,
             None => {
-                self.strings.push(text);
-                (self.strings.len() - 1)
+                self.strings.push(text.clone());
+                self.strings.len() - 1
             }
         }
+    }
+
+    pub fn add_function(&mut self, v: Value) -> usize {
+        self.functions.push(v);
+        self.functions.len() - 1
     }
 
     pub fn get_string(&self, id: usize) -> &str {

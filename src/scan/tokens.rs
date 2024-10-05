@@ -41,6 +41,7 @@ pub enum TokenType {
     Pipe,
 
     Is,
+    Pinned,
 
     EndOfLine,
 
@@ -154,6 +155,7 @@ impl Display for TokenType {
                 TokenType::Pin => "Pin",
                 TokenType::MinusGreater => "MinusGreater",
                 TokenType::EndOfLine => "EndOfLine",
+                TokenType::Pinned => "Pinned",
                 _ => "UnknownToken",
             }
         )

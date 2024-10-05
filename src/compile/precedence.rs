@@ -76,6 +76,7 @@ impl ParseRule {
             TokenType::And => Some(Compiler::and),
             TokenType::Or => Some(Compiler::or),
             TokenType::EqualEqual => Some(Compiler::binary),
+            TokenType::EqualGreater => Some(Compiler::function),
             _ => None,
         }
     }

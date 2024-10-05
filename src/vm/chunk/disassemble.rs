@@ -121,6 +121,7 @@ impl ByteCodeChunk {
             (Op::BeginScope, ("BSC", ByteCodeChunk::disassemble_simple)),
             (Op::EndScope, ("ESC", ByteCodeChunk::disassemble_simple)),
             (Op::Equal, ("EQL", ByteCodeChunk::disassemble_simple)),
+            (Op::Function, ("DFN", ByteCodeChunk::disassemble_1::<usize>)),
         ]
         .into_iter()
         .map(|(op, (name, func))| (op, (name, func as DisassembleFn)))

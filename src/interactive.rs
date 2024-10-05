@@ -7,7 +7,7 @@ use rustyline::{error::ReadlineError, DefaultEditor, Result};
 
 use crate::{
     compile::compiler::Compiler,
-    scan::scanner::Scanner,
+    scan::{scanner::Scanner, tokens::TokenType},
     vm::{chunk::bytecode_chunk::ByteCodeChunk, evaluate::EvaluateContext, vm::Vm},
 };
 
@@ -42,7 +42,7 @@ pub fn interactive() -> Result<()> {
                 let chunk = ByteCodeChunk::new();
                 let mut compiler = Compiler::new(scanner, chunk);
 
-                match compiler.compile() {
+                match compiler.compile_to(TokenType::EndOfFile) {
                     Err(e) => {
                         println!("error: {:?}", e)
                     }

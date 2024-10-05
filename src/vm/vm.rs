@@ -1,4 +1,4 @@
-use std::ptr;
+use std::{any::Any, ptr};
 
 use crate::{string_value, vm::evaluate::EvaluateContext};
 
@@ -19,11 +19,19 @@ pub enum VmError {
     UnknownSysCall,
 }
 
+struct CallFrame {
+    function: Value,
+    chunk: ByteCodeChunk,
+    ip: *const u8,
+}
+
 pub struct Vm {
     chunk: ByteCodeChunk,
     ip: *const u8,
     stack: Vec<Value>,
     pub(super) scopes: Vec<Scope>,
+    pub(super) frames: Vec<CallFrame>,
+    current_frame: Option<CallFrame>,
 }
 
 impl Vm {
@@ -70,8 +78,6 @@ impl Vm {
         chunk: ByteCodeChunk,
         context: EvaluateContext,
     ) -> Result<Value, VmError> {
-        self.reset_stack();
-
         self.chunk = chunk;
         self.ip = self.chunk.content.as_ptr();
 
@@ -373,6 +379,8 @@ impl Vm {
             chunk,
             stack: Vec::new(),
             scopes: vec![Scope::new()],
+            frames: Vec::new(),
+            current_frame: None,
         }
     }
 }

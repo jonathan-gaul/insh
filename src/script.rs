@@ -7,7 +7,7 @@ use rustyline::Result;
 
 use crate::{
     compile::compiler::Compiler,
-    scan::scanner::Scanner,
+    scan::{scanner::Scanner, tokens::TokenType},
     vm::{chunk::bytecode_chunk::ByteCodeChunk, evaluate::EvaluateContext, vm::Vm},
 };
 
@@ -21,7 +21,7 @@ pub fn run_script(vm: &mut Vm, name: String) -> Result<()> {
     let scanner = Scanner::new(buffer);
     let mut compiler = Compiler::new(scanner, ByteCodeChunk::new());
 
-    match compiler.compile() {
+    match compiler.compile_to(TokenType::EndOfFile) {
         Err(e) => {
             println!("compile error: {:?}", e)
         }

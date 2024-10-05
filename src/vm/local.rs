@@ -108,17 +108,22 @@ impl Vm {
         value: Value,
         pinned: bool,
     ) -> Result<(), VmError> {
-        let local_exists = self.get_local(&name, ScopeSearch::CurrentOnly).is_some();
+        let last_scope = self.scopes.last_mut().ok_or(VmError::InvalidOperation)?;
+        let existing_local = last_scope.get_local_mut(&name);
 
-        if let Some(last_scope) = self.scopes.last_mut() {
-            if local_exists {
-                Err(VmError::LocalAlreadyDefined)
-            } else {
+        match existing_local {
+            Some(Local {
+                value: _,
+                pinned: true,
+            }) => Err(VmError::PinnedLocal),
+            Some(local) => {
+                local.pinned = true;
+                Ok(())
+            }
+            None => {
                 last_scope.locals.insert(name, Local { value, pinned });
                 Ok(())
             }
-        } else {
-            Err(VmError::InvalidOperation)
         }
     }
 }

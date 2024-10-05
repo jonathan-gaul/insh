@@ -120,7 +120,31 @@ impl Scanner {
             }
             'l' => self.check_keyword(1, "et", TokenType::Let),
             'o' => self.check_keyword(1, "r", TokenType::Or),
-            'p' => self.check_keyword(1, "in", TokenType::Pin),
+            'p' => {
+                if self.current_offset - self.start_offset > 1 {
+                    match self.chars[self.start_offset + 1] {
+                        'i' => {
+                            if self.current_offset - self.start_offset > 2 {
+                                match self.chars[self.start_offset + 2] {
+                                    'n' => {
+                                        if self.current_offset - self.start_offset > 3 {
+                                            self.check_keyword(3, "ned", TokenType::Pinned)
+                                        } else {
+                                            TokenType::Pin
+                                        }
+                                    }
+                                    _ => TokenType::Identifier,
+                                }
+                            } else {
+                                TokenType::Identifier
+                            }
+                        }
+                        _ => TokenType::Identifier,
+                    }
+                } else {
+                    TokenType::Identifier
+                }
+            }
             'r' => self.check_keyword(1, "ead", TokenType::Read),
             't' => {
                 if self.current_offset - self.start_offset > 1 {
@@ -366,9 +390,10 @@ impl Scanner {
                         }
                     }
 
-                    (ScannerMode::Argument, '(') => self.push_mode(ScannerMode::Expression),
+                    (ScannerMode::Argument, '(' | '|' | '=') => {
+                        self.push_mode(ScannerMode::Expression)
+                    }
                     (ScannerMode::Argument, '"') => return self.read_string(),
-                    (ScannerMode::Argument, '|') => self.push_mode(ScannerMode::Expression),
                     (ScannerMode::Argument, '@' | '$') => return self.read_variable(),
                     (ScannerMode::Argument, ')') => {
                         self.pop_mode();
@@ -475,6 +500,21 @@ impl Scanner {
                     }
                 }
             }
+        }
+    }
+}
+
+impl Default for Scanner {
+    fn default() -> Self {
+        Scanner {
+            start_offset: 0,
+            current_offset: 0,
+            current_column: 0,
+            current_line: 0,
+            chars: Vec::new(),
+            mode: ScannerMode::Command,
+            mode_stack: Vec::new(),
+            debug_output_tokens: true,
         }
     }
 }
