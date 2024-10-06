@@ -117,7 +117,8 @@ impl Vm {
                 pinned: true,
             }) => Err(VmError::PinnedLocal),
             Some(local) => {
-                local.pinned = true;
+                local.pinned = pinned;
+                local.value = value;
                 Ok(())
             }
             None => {
