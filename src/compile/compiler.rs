@@ -23,7 +23,7 @@ pub struct LocalVariable {
 }
 
 pub struct Compiler {
-    pub(super) function: Value,
+    pub(super) chunk: ByteCodeChunk,
 
     pub(super) scanner: Scanner,
 
@@ -39,13 +39,12 @@ pub struct Compiler {
 
 impl Compiler {
     pub fn new(scanner: Scanner, chunk: ByteCodeChunk) -> Self {
-        let function = Value::Function(String::new(), 0, chunk);
         let local = LocalVariable {
             name: Token::new(TokenType::String, "".to_string()),
             depth: 0,
         };
         Compiler {
-            function,
+            chunk,
             scanner,
             previous: Token::new(TokenType::Unknown, String::new()),
             current: Token::new(TokenType::Unknown, String::new()),
@@ -59,11 +58,7 @@ impl Compiler {
     }
 
     pub fn into_chunk(self) -> ByteCodeChunk {
-        if let Value::Function(_, _, chunk) = self.function {
-            chunk
-        } else {
-            ByteCodeChunk::new()
-        }
+        self.chunk
     }
 
     pub(super) fn advance(&mut self) -> Result<(), CompileError> {
@@ -251,14 +246,53 @@ impl Compiler {
         Ok(())
     }
 
-    pub(super) fn let_var(&mut self, _: bool) -> Result<(), CompileError> {
-        // let @identifier = <expr>
-        self.advance()?;
+    pub(super) fn function_definition(
+        &mut self,
+        params: Vec<String>,
+        _: bool,
+    ) -> Result<(), CompileError> {
+        // @param1 @param2 => block
+        // or:
+        // => block
+        self.match_type(TokenType::EqualGreater)?;
 
-        let identifier = self.previous.text.to_owned();
-        self.match_type(TokenType::Equal)?;
+        let offset = self.emit_branch(Op::Branch);
+        let arity = params.len() as u8;
+
+        // Pull arguments from stack
+        for identifier in params {
+            self.emit_var(Op::DefineLocal, &identifier);
+        }
+
+        // Function body
         self.expression()?;
 
+        // Patch our branch.
+        self.patch_branch(offset);
+
+        // Now make the function
+        self.emit_function(Value::Function(arity, offset));
+
+        Ok(())
+    }
+
+    pub(super) fn let_var(&mut self, can_assign: bool) -> Result<(), CompileError> {
+        // let @identifier = <expr>
+        self.advance()?;
+        let identifier = self.previous.text.to_owned();
+
+        // might be a function definition...
+        if self.check(TokenType::EqualGreater) || self.check(TokenType::Identifier) {
+            let mut params = Vec::new();
+            while self.check(TokenType::Identifier) {
+                self.advance()?;
+                params.push(self.previous.text.clone());
+            }
+            self.function_definition(params, can_assign)?;
+        } else {
+            self.match_type(TokenType::Equal)?;
+            self.expression()?;
+        }
         self.emit_var(Op::DefineLocal, &identifier);
         Ok(())
     }
@@ -352,23 +386,8 @@ impl Compiler {
         Ok(())
     }
 
-    pub(super) fn function(&mut self, _: bool) -> Result<(), CompileError> {
-        // <expr> => <block>
-        let mut compiler = Compiler::new(take(&mut self.scanner), ByteCodeChunk::new());
-
-        let func = compiler.compile_to(TokenType::CloseBrace)?;
-
-        self.emit_function(func.clone());
-
-        Ok(())
-    }
-
     pub(super) fn current_offset(&self) -> usize {
-        if let Value::Function(_, _, chunk) = &self.function {
-            chunk.len()
-        } else {
-            0
-        }
+        self.chunk.len()
     }
 
     pub(super) fn while_(&mut self, _: bool) -> Result<(), CompileError> {
@@ -391,14 +410,12 @@ impl Compiler {
 
     pub(super) fn patch_branch(&mut self, offset: usize) {
         let current_offset = self.current_offset();
-        if let Value::Function(_, _, chunk) = &mut self.function {
-            let size = size_of::<usize>();
-            let distance = current_offset - offset - size;
-            chunk.content[offset..offset + size].copy_from_slice(&usize::to_ne_bytes(distance));
-        }
+        let size = size_of::<usize>();
+        let distance = current_offset - offset - size;
+        self.chunk.content[offset..offset + size].copy_from_slice(&usize::to_ne_bytes(distance));
     }
 
-    pub fn compile_to(&mut self, tt: TokenType) -> Result<&Value, CompileError> {
+    pub fn compile_to(&mut self, tt: TokenType) -> Result<(), CompileError> {
         self.advance()?;
 
         while !self.match_type(tt)? {
@@ -417,12 +434,10 @@ impl Compiler {
         self.emit_return();
 
         if self.debug_output_chunk {
-            if let Value::Function(name, _, chunk) = &self.function {
-                println!("{}:\n{}", name, chunk.display());
-            }
+            println!("{}", self.chunk.display());
         }
 
-        Ok(&self.function)
+        Ok(())
     }
 }
 

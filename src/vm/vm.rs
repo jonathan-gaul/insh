@@ -190,7 +190,7 @@ impl Vm {
                     },
                     Value::Int(x) => {
                         let y = self.pop_stack().to_ivalue()?;
-                        self.push_stack(Value::Int(0 - x));
+                        self.push_stack(Value::Int(y - x));
                     }
                     Value::Float(x) => {
                         let y = self.pop_stack().to_fvalue()?;

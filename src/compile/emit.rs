@@ -6,9 +6,7 @@ use super::compiler::Compiler;
 impl Compiler {
     #[inline(always)]
     pub(super) fn emit_bytes(&mut self, v: &[u8]) {
-        if let Value::Function(_, _, chunk) = &mut self.function {
-            chunk.content.extend(v)
-        }
+        self.chunk.content.extend(v)
     }
 
     #[inline(always)]
@@ -18,11 +16,9 @@ impl Compiler {
 
     #[inline(always)]
     pub(super) fn emit_var(&mut self, op: Op, name: &String) {
-        if let Value::Function(_, _, chunk) = &mut self.function {
-            let constant_id = chunk.add_string(name);
-            chunk.write_op(op);
-            chunk.write_usize(constant_id);
-        }
+        let constant_id = self.chunk.add_string(name);
+        self.chunk.write_op(op);
+        self.chunk.write_usize(constant_id);
     }
 
     #[inline(always)]
@@ -54,14 +50,10 @@ impl Compiler {
 
     #[inline(always)]
     pub(super) fn emit_string_constant(&mut self, v: String) -> usize {
-        if let Value::Function(_, _, chunk) = &mut self.function {
-            let constant_id = chunk.add_string(&v);
-            chunk.write_op(Op::StringConstant);
-            chunk.write_usize(constant_id);
-            constant_id
-        } else {
-            0
-        }
+        let constant_id = self.chunk.add_string(&v);
+        self.chunk.write_op(Op::StringConstant);
+        self.chunk.write_usize(constant_id);
+        constant_id
     }
 
     #[inline(always)]
@@ -77,20 +69,16 @@ impl Compiler {
 
     #[inline(always)]
     pub(super) fn emit_command(&mut self, cmd: String) {
-        if let Value::Function(_, _, chunk) = &mut self.function {
-            let constant_id = chunk.add_string(&cmd);
-            chunk.write_op(Op::Command);
-            chunk.write_usize(constant_id);
-        }
+        let constant_id = self.chunk.add_string(&cmd);
+        self.chunk.write_op(Op::Command);
+        self.chunk.write_usize(constant_id);
     }
 
     #[inline(always)]
     pub(super) fn emit_sys_call(&mut self, call: String) {
-        if let Value::Function(_, _, chunk) = &mut self.function {
-            let constant_id = chunk.add_string(&call);
-            chunk.write_op(Op::SysCall);
-            chunk.write_usize(constant_id);
-        }
+        let constant_id = self.chunk.add_string(&call);
+        self.chunk.write_op(Op::SysCall);
+        self.chunk.write_usize(constant_id);
     }
 
     #[inline(always)]
@@ -105,35 +93,27 @@ impl Compiler {
 
     #[inline(always)]
     pub(super) fn emit_branch(&mut self, op: Op) -> usize {
-        if let Value::Function(_, _, chunk) = &mut self.function {
-            chunk.write_op(op);
+        self.chunk.write_op(op);
 
-            let offset = chunk.len();
-            chunk.write_usize(usize::MAX);
+        let offset = self.chunk.len();
+        self.chunk.write_usize(usize::MAX);
 
-            offset
-        } else {
-            0
-        }
+        offset
     }
 
     #[inline(always)]
     pub(super) fn emit_loop(&mut self, start_offset: usize) {
-        if let Value::Function(_, _, chunk) = &mut self.function {
-            chunk.write_op(Op::BranchBack);
+        self.chunk.write_op(Op::BranchBack);
 
-            let offset = chunk.len() - start_offset + IVALUE_SIZE;
+        let offset = self.chunk.len() - start_offset + IVALUE_SIZE;
 
-            chunk.write_usize(offset);
-        }
+        self.chunk.write_usize(offset);
     }
 
     #[inline(always)]
     pub(super) fn emit_function(&mut self, func: Value) {
-        if let Value::Function(_, _, chunk) = &mut self.function {
-            let id = chunk.add_function(func);
-            chunk.write_op(Op::Function);
-            chunk.write_usize(id);
-        }
+        let id = self.chunk.add_function(func);
+        self.chunk.write_op(Op::Function);
+        self.chunk.write_usize(id);
     }
 }
