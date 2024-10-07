@@ -87,7 +87,7 @@ impl Value {
                 Ok(x) => Ok(x),
                 Err(_) => return Err(VmError::InvalidValue),
             },
-            Value::Int(x) => Ok(*x as fvalue),
+            Value::Int(x) => Ok((*x) as fvalue),
             Value::Float(x) => Ok(*x),
             Value::Map(_) => return Err(VmError::InvalidOperation),
             Value::Command(..) => return Err(VmError::InvalidOperation),

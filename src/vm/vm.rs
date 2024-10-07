@@ -133,10 +133,21 @@ impl Vm {
                         },
                         _ => return Err(VmError::InvalidOperation),
                     },
-                    Value::Int(x) => {
-                        let y = self.pop_stack().to_ivalue()?;
-                        self.push_stack(Value::Int(y + x));
-                    }
+                    Value::Int(x) => match self.pop_stack() {
+                        Value::None => self.push_stack(Value::Int(x)),
+                        Value::Int(y) => self.push_stack(Value::Int(y + x)),
+                        Value::Float(y) => self.push_stack(Value::Float(y + x as fvalue)),
+                        Value::String(y) => {
+                            if let Ok(y) = y.parse::<ivalue>() {
+                                self.push_stack(Value::Int(y + x));
+                            } else if let Ok(y) = y.parse::<fvalue>() {
+                                self.push_stack(Value::Float(y + x as fvalue));
+                            } else {
+                                self.push_stack(Value::String(y + &x.to_string()));
+                            }
+                        }
+                        _ => return Err(VmError::InvalidOperation),
+                    },
                     Value::Float(x) => {
                         let y = self.pop_stack().to_fvalue()?;
                         self.push_stack(Value::Float(y + x));
@@ -156,10 +167,13 @@ impl Vm {
                         Value::String(_) => self.push_stack(Value::None),
                         _ => return Err(VmError::InvalidOperation),
                     },
-                    Value::Int(x) => {
-                        let y = self.pop_stack().to_ivalue()?;
-                        self.push_stack(Value::Int(y * x));
-                    }
+                    Value::Int(x) => match self.pop_stack() {
+                        Value::None => self.push_stack(Value::Int(0)),
+                        Value::Int(y) => self.push_stack(Value::Int(x * y)),
+                        Value::Float(y) => self.push_stack(Value::Float((x as fvalue) * y)),
+                        Value::String(y) => self.push_stack(Value::String(y.repeat(x as usize))),
+                        _ => return Err(VmError::InvalidOperation),
+                    },
                     Value::Float(x) => {
                         let y = self.pop_stack().to_fvalue()?;
                         self.push_stack(Value::Float(y * x));
