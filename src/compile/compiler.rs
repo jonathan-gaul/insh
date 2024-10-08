@@ -252,6 +252,8 @@ impl Compiler {
         let offset = self.emit_branch(Op::Branch);
         let arity = params.len() as u8;
 
+        self.emit_begin_scope();
+
         // Pull arguments from stack
         for identifier in params {
             self.emit_var(Op::DefineLocal, &identifier);
@@ -259,6 +261,9 @@ impl Compiler {
 
         // Function body
         self.expression()?;
+
+        self.emit_end_scope();
+        self.emit_return();
 
         // Patch our branch.
         self.patch_branch(offset);
