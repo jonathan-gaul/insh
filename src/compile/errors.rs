@@ -12,6 +12,5 @@ pub enum CompileError {
     MissingFrom,
     ParseError(),
     ScanError(ScanError),
-    TooManyLocals,
     InvalidAssignment,
 }

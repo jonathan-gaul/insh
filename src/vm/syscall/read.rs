@@ -12,7 +12,7 @@ impl Vm {
                 let mut buffer = String::new();
                 match stdin().read_line(&mut buffer) {
                     Ok(_) => Ok(Value::String(buffer)),
-                    Err(e) => return Err(VmError::InvalidOperation),
+                    Err(_) => return Err(VmError::InvalidOperation),
                 }
             }
             _ => return Ok(Value::String(from)),

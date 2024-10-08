@@ -1,5 +1,3 @@
-use std::mem::{self, take};
-
 use crate::{
     scan::{
         scanner::Scanner,
@@ -18,7 +16,6 @@ use super::{
 };
 
 pub struct LocalVariable {
-    name: Token,
     depth: i64,
 }
 
@@ -39,10 +36,6 @@ pub struct Compiler {
 
 impl Compiler {
     pub fn new(scanner: Scanner, chunk: ByteCodeChunk) -> Self {
-        let local = LocalVariable {
-            name: Token::new(TokenType::String, "".to_string()),
-            depth: 0,
-        };
         Compiler {
             chunk,
             scanner,
@@ -51,7 +44,7 @@ impl Compiler {
 
             debug_output_chunk: true,
 
-            locals: Vec::from([local]),
+            locals: Vec::new(),
             local_count: 0,
             scope_depth: 0,
         }
@@ -64,7 +57,7 @@ impl Compiler {
     pub(super) fn advance(&mut self) -> Result<(), CompileError> {
         match self.scanner.read_token() {
             Ok(token) => {
-                self.previous = mem::replace(&mut self.current, token);
+                self.previous = std::mem::replace(&mut self.current, token);
                 Ok(())
             }
             Err(e) => Err(CompileError::ScanError(e)),

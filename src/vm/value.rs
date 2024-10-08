@@ -6,7 +6,6 @@ pub const IVALUE_SIZE: usize = size_of::<ivalue>();
 pub use f64 as fvalue;
 
 use super::vm::VmError;
-pub const FVALUE_SIZE: usize = size_of::<fvalue>();
 
 #[derive(Debug, Clone)]
 pub enum Value {

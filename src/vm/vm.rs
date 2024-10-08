@@ -1,6 +1,6 @@
-use std::{any::Any, ptr};
+use std::ptr;
 
-use crate::{string_value, vm::evaluate::EvaluateContext};
+use crate::vm::evaluate::EvaluateContext;
 
 use super::{
     chunk::bytecode_chunk::ByteCodeChunk,
@@ -283,7 +283,7 @@ impl Vm {
 
                     if let Value::Int(arg_count) = self.pop_stack() {
                         let mut args = Vec::new();
-                        for i in 0..arg_count {
+                        for _ in 0..arg_count {
                             args.push(self.pop_stack());
                         }
                         args.reverse();
