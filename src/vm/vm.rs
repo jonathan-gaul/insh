@@ -373,6 +373,15 @@ impl Vm {
                     }
                 }
 
+                Op::FunctionDefinition => {
+                    let id = self.read_as::<usize>();
+                    if let Some(func) = self.chunk.functions.get(id) {
+                        self.push_stack(func.to_owned());
+                    } else {
+                        println!("function with id {} was not found", id);
+                    }
+                }
+
                 x => {
                     let offset = self.ip.wrapping_sub(self.chunk.content.as_ptr() as usize);
                     println!("unknown op: {:?} at {:08}", x, offset as usize);

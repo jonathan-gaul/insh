@@ -61,7 +61,7 @@ impl ByteCodeChunk {
     pub fn display(&self) -> String {
         let mut output = String::new();
 
-        output += format!("chunk: 000000 - {:06}\n", self.content.len()).as_str();
+        output += format!("\nchunk: 000000 - {:06}\n", self.content.len()).as_str();
 
         output += "  strings:\n";
 

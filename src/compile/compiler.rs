@@ -280,9 +280,9 @@ impl Compiler {
         let identifier = self.previous.text.to_owned();
 
         // might be a function definition...
-        if self.check(TokenType::EqualGreater) || self.check(TokenType::Identifier) {
+        if self.check(TokenType::EqualGreater) || self.check(TokenType::LocalVariable) {
             let mut params = Vec::new();
-            while self.check(TokenType::Identifier) {
+            while self.check(TokenType::LocalVariable) {
                 self.advance()?;
                 params.push(self.previous.text.clone());
             }

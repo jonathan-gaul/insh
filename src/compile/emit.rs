@@ -113,7 +113,7 @@ impl Compiler {
     #[inline(always)]
     pub(super) fn emit_function(&mut self, func: Value) {
         let id = self.chunk.add_function(func);
-        self.chunk.write_op(Op::Function);
+        self.chunk.write_op(Op::FunctionDefinition);
         self.chunk.write_usize(id);
     }
 }
