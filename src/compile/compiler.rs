@@ -269,7 +269,7 @@ impl Compiler {
         self.patch_branch(offset);
 
         // Now make the function
-        self.emit_function(Value::Function(arity, offset));
+        self.emit_function(Value::Function(arity, &self.chunk.content[offset]));
 
         Ok(())
     }

@@ -16,7 +16,7 @@ pub enum Value {
     Bool(bool),
     Map(HashMap<Value, Value>),
     Command(String, Vec<Value>),
-    Function(u8, usize),
+    Function(u8, *const u8),
 }
 
 #[macro_export]
@@ -41,7 +41,7 @@ impl std::fmt::Display for Value {
             }
             Value::Command(cmd, args) => write!(f, "{}/{}", cmd, args.len()),
             Value::Bool(x) => write!(f, "{}", x),
-            Value::Function(arity, _) => write!(f, "function/{}", arity),
+            Value::Function(arity, ptr) => write!(f, "function/{}@{:?}", arity, ptr),
             // Value::Array(x) => {
             //     for k in x {
             //         _ = write!(f, "{}", k);
