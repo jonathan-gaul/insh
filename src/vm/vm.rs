@@ -20,8 +20,6 @@ pub enum VmError {
 }
 
 struct CallFrame {
-    function: Value,
-    chunk: ByteCodeChunk,
     ip: *const u8,
 }
 
@@ -86,9 +84,13 @@ impl Vm {
 
             match op {
                 Op::Return => {
-                    let value = self.pop_stack();
-                    let value = self.evaluate(value, context);
-                    return Ok(value);
+                    if !self.return_from_subroutine() {
+                        // If we didn't return from a subroutine, we're exiting the root
+                        // routine, so return the value to our caller.
+                        let value = self.pop_stack();
+                        let value = self.evaluate(value, context);
+                        return Ok(value);
+                    }
                 }
 
                 Op::IntConstant => {
@@ -393,6 +395,20 @@ impl Vm {
     fn read_string_const(&mut self) -> String {
         let string_id = self.read_as::<usize>();
         self.chunk.get_string(string_id).to_owned()
+    }
+
+    pub(super) fn branch_to_subroutine(&mut self, ptr: *const u8) {
+        self.frames.push(CallFrame { ip: self.ip });
+        self.ip = ptr;
+    }
+
+    pub(super) fn return_from_subroutine(&mut self) -> bool {
+        if let Some(frame) = self.frames.pop() {
+            self.ip = frame.ip;
+            true
+        } else {
+            false
+        }
     }
 
     pub fn new() -> Vm {
